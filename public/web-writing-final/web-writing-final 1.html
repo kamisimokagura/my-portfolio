@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Writing / SEO Content | kamikagura.com</title>
+  <style>
+    :root {
+      --primary: #1a1a2e;
+      --secondary: #16213e;
+      --accent: #0f3460;
+      --text: #333;
+      --text-light: #666;
+      --bg: #fafafa;
+      --card-bg: #fff;
+      --border: #e0e0e0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      line-height: 1.8;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      padding: 80px 0 60px;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .hero .subtitle {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      margin-bottom: 32px;
+    }
+
+    .hero .intro {
+      font-size: 0.95rem;
+      line-height: 2;
+      opacity: 0.95;
+    }
+
+    /* Section */
+    section {
+      padding: 60px 0;
+    }
+
+    section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    /* Work Card */
+    .work-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+
+    .work-card-header {
+      background: var(--secondary);
+      color: #fff;
+      padding: 24px 28px;
+    }
+
+    .work-card-header h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .work-card-header .tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .work-card-body {
+      padding: 28px;
+    }
+
+    .meta-table {
+      width: 100%;
+      margin-bottom: 24px;
+      border-collapse: collapse;
+    }
+
+    .meta-table th {
+      text-align: left;
+      width: 140px;
+      padding: 10px 0;
+      font-weight: 500;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .meta-table td {
+      padding: 10px 0;
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+
+    .toggle-btn:hover {
+      background: var(--primary);
+    }
+
+    .article-content {
+      display: none;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .article-content.open {
+      display: block;
+    }
+
+    .article-content h4 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      margin: 32px 0 16px;
+      padding-left: 12px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .article-content h4:first-child {
+      margin-top: 0;
+    }
+
+    .article-content h5 {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin: 24px 0 12px;
+    }
+
+    .article-content p {
+      margin-bottom: 16px;
+      text-align: justify;
+    }
+
+    .article-content ul {
+      margin: 16px 0;
+      padding-left: 24px;
+    }
+
+    .article-content li {
+      margin-bottom: 8px;
+    }
+
+    /* Policy Section */
+    .policy-list {
+      list-style: none;
+    }
+
+    .policy-list li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .policy-list li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--primary);
+      color: #fff;
+      padding: 40px 0;
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 {
+        font-size: 1.6rem;
+      }
+
+      .meta-table th {
+        width: 110px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>Web Writing / SEO Content</h1>
+      <p class="subtitle">Webライティング実績</p>
+      <p class="intro">
+        Web制作のほか、SEOを前提としたWebライティングも手がけています。<br>
+        就職・転職・キャリア領域では、読者が検索時に抱える不安や疑問を具体的に拾い上げ、検索意図に沿った構成・執筆を行います。<br>
+        「読み終えたあとに、読者が次のアクションを起こせる」構成を意識。編集者のフィードバックを受けながら改善を回していく前提で書いています。
+      </p>
+    </div>
+  </section>
+
+  <!-- Writing Works Section -->
+  <section>
+    <div class="container">
+      <h2>Writing Works</h2>
+
+      <!-- 記事1 -->
+      <article class="work-card">
+        <div class="work-card-header">
+          <h3>20代で転職を繰り返すのは不利？採用担当の本音と対策を解説</h3>
+          <span class="tag">SEO記事（就職・転職系）</span>
+        </div>
+        <div class="work-card-body">
+          <table class="meta-table">
+            <tr>
+              <th>想定メディア</th>
+              <td>若年層向け転職・就職支援メディア</td>
+            </tr>
+            <tr>
+              <th>想定読者</th>
+              <td>20代で複数回の転職経験があり、次の転職活動に不安を感じている求職者</td>
+            </tr>
+            <tr>
+              <th>検索意図</th>
+              <td>「20代 転職 繰り返す 不利」「20代 転職回数 多い」など</td>
+            </tr>
+            <tr>
+              <th>構成で意識した点</th>
+              <td>
+                ・読者の不安を冒頭で受け止め、結論を先出し<br>
+                ・採用担当のリアルな判断軸を提示して説得力を持たせる<br>
+                ・「で、どうすればいい？」に具体策で応える
+              </td>
+            </tr>
+          </table>
+          <button class="toggle-btn" onclick="toggleArticle(this)">本文を読む</button>
+
+          <div class="article-content">
+            <h4>転職回数が多いと不利になる？</h4>
+            <p>
+              「20代で転職を繰り返していると、次の就職活動で不利になるのでは」——そう感じている人は少なくないはずです。書類選考で落とされやすくなる、という話を耳にしたことがある人も多いでしょう。
+            </p>
+            <p>
+              結論から言えば、転職回数だけで機械的に落とされるわけではありません。ただ、回数が多いと採用担当者に「またすぐ辞めるのでは」という懸念を抱かせやすいのは事実です。
+            </p>
+            <p>
+              この記事では、採用担当者が転職回数をどう判断しているのか、その本音と、回数が多くても内定を取るための対策を整理します。
+            </p>
+
+            <h4>採用担当者は転職回数をどう見ているのか</h4>
+
+            <h5>「回数」より「理由」を見ている</h5>
+            <p>
+              多くの採用担当者が気にしているのは、回数そのものではなく「なぜ辞めたのか」です。キャリアアップや専門性を深めるためといった前向きな理由なら、回数が多くてもマイナス評価にはなりにくい傾向があります。
+            </p>
+            <p>
+              一方、「人間関係が合わなかった」「思っていた仕事と違った」といった理由が続くと、「うちでも同じことが起きるのでは」と警戒されます。
+            </p>
+
+            <h5>一貫性があるかどうか</h5>
+            <p>
+              転職を繰り返していても、職種や業界に一貫性があれば「この分野でキャリアを積んできた人」と捉えてもらえます。逆に、営業→事務→販売→エンジニアのように方向がバラバラだと、「結局何がしたいのかわからない」という印象を持たれやすくなります。
+            </p>
+
+            <h5>在籍期間の長さ</h5>
+            <p>
+              1社あたりの在籍期間も判断材料です。すべて1年未満だと「すぐ辞める人」という印象が強まります。1社でも2〜3年続けた経験があれば、「環境次第で長く働ける人」と見てもらいやすくなります。
+            </p>
+
+            <h4>転職回数が多くても内定を取るための対策</h4>
+
+            <h5>転職理由を一貫したストーリーにまとめる</h5>
+            <p>
+              複数回の転職があっても、それぞれの理由を「一つのキャリアストーリー」として整理することが重要です。「最初は○○を目指して入社した。△△を経験するうちに□□を追求するようになった」というように、転職の流れに筋を通しましょう。
+            </p>
+
+            <h5>「次は長く働ける」根拠を示す</h5>
+            <p>
+              採用担当者の最大の懸念は「また辞めるのでは」という点です。これを払拭するには、「なぜこの会社なら長く働けると考えているのか」を具体的に伝える必要があります。
+            </p>
+            <ul>
+              <li>これまでの経験から、自分が力を発揮できる環境がわかった</li>
+              <li>御社の○○という事業や文化に強く惹かれている</li>
+              <li>この会社で達成したい具体的な目標がある</li>
+            </ul>
+            <p>
+              こうした根拠を示せれば、「今度は違う」という説得力が生まれます。
+            </p>
+
+            <h5>スキルと成果を具体的にアピールする</h5>
+            <p>
+              転職回数への懸念を上回るだけの価値を示すことも有効です。各社で身につけたスキルや達成した成果を、数字や具体例とともに伝えましょう。「転職を重ねたからこそ、幅広い経験がある」という強みに変えることができます。
+            </p>
+
+            <h4>まとめ</h4>
+            <p>
+              20代で転職を繰り返していることは、それだけで致命的なマイナスにはなりません。採用担当者が見ているのは、「なぜ辞めたのか」「次は続くのか」「どんな価値を出せるのか」という点です。
+            </p>
+            <p>
+              転職理由を前向きに整理し、一貫性のあるストーリーとして伝えること。スキルと成果を具体的にアピールすること。この2点を押さえれば、転職回数の多さをカバーして内定を勝ち取ることは十分に可能です。
+            </p>
+            <p>
+              過去は変えられませんが、伝え方は変えられます。
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- 記事2 -->
+      <article class="work-card">
+        <div class="work-card-header">
+          <h3>正社員経験がなくても就職できる？20代未経験からの成功パターン</h3>
+          <span class="tag">SEO記事（若年層向け就職支援）</span>
+        </div>
+        <div class="work-card-body">
+          <table class="meta-table">
+            <tr>
+              <th>想定メディア</th>
+              <td>若年層向け転職・就職支援メディア</td>
+            </tr>
+            <tr>
+              <th>想定読者</th>
+              <td>フリーター・派遣社員・アルバイト経験のみで、正社員就職を目指している20代</td>
+            </tr>
+            <tr>
+              <th>検索意図</th>
+              <td>「正社員経験なし 就職」「20代 未経験 正社員」「フリーターから正社員」など</td>
+            </tr>
+            <tr>
+              <th>構成で意識した点</th>
+              <td>
+                ・「経験がなくても大丈夫」という安心感を冒頭で伝える<br>
+                ・成功した人の具体例を示して、行動のイメージを持たせる<br>
+                ・よくある失敗パターンも先回りして伝える
+              </td>
+            </tr>
+          </table>
+          <button class="toggle-btn" onclick="toggleArticle(this)">本文を読む</button>
+
+          <div class="article-content">
+            <h4>正社員経験がないと就職できない？</h4>
+            <p>
+              「正社員として働いたことがないから、就職活動がうまくいかないのでは」——そう感じている20代の方は多いのではないでしょうか。
+            </p>
+            <p>
+              結論から言えば、正社員経験がなくても就職は可能です。20代であれば、多くの企業が「ポテンシャル採用」として未経験者を受け入れています。
+            </p>
+            <p>
+              この記事では、正社員経験のない状態から就職を成功させた人に共通するパターンと、押さえておきたい行動のポイントを整理します。
+            </p>
+
+            <h4>企業が20代未経験者に期待していること</h4>
+
+            <h5>素直さと吸収力</h5>
+            <p>
+              未経験者を採用する企業が重視しているのは、「教えたことを素直に吸収できるかどうか」です。経験がない分、変な癖がついていない状態で入ってもらえるのは、企業にとってもメリットになります。
+            </p>
+
+            <h5>長く働いてくれる可能性</h5>
+            <p>
+              20代であれば、今後10年、20年と働いてくれる可能性があります。企業は採用や教育にコストをかけているため、長期的に貢献してくれる人材を求めています。「この会社で成長したい」という意欲が伝われば、経験の有無は大きな問題にはなりません。
+            </p>
+
+            <h5>仕事への姿勢</h5>
+            <p>
+              スキルや経験よりも、「働くことへの前向きな姿勢」を見ている企業は多いです。アルバイトや派遣でも、真剣に取り組んできたことが伝われば、それは十分な評価材料になります。
+            </p>
+
+            <h4>未経験から正社員就職を成功させた人の共通点</h4>
+
+            <h5>パターン1：アルバイト経験を「仕事の実績」として伝えた</h5>
+            <p>
+              正社員経験がなくても、アルバイトで得た経験は立派な実績です。成功した人は、アルバイトでの経験を以下のように具体的に伝えていました。
+            </p>
+            <ul>
+              <li>飲食店で3年働き、新人教育を任されるようになった</li>
+              <li>販売職で月間売上1位を3回達成した</li>
+              <li>シフトリーダーとして10人のスタッフをまとめていた</li>
+            </ul>
+            <p>
+              雇用形態に関係なく、「何をやってきたか」を具体的に伝えることが重要です。
+            </p>
+
+            <h5>パターン2：「なぜ正社員を目指すのか」を明確にした</h5>
+            <p>
+              面接でほぼ必ず聞かれるのが「なぜ今、正社員を目指すのか」という質問です。成功した人は、この質問に対して明確な答えを用意していました。
+            </p>
+            <ul>
+              <li>アルバイトでは任せてもらえる範囲に限界があり、もっと責任のある仕事がしたい</li>
+              <li>将来のキャリアを考えたとき、今のうちにスキルを身につけたい</li>
+              <li>安定した環境で長く働きながら、専門性を高めたい</li>
+            </ul>
+            <p>
+              「なんとなく正社員になりたい」ではなく、理由を自分の言葉で説明できることが大切です。
+            </p>
+
+            <h5>パターン3：未経験歓迎の求人を狙った</h5>
+            <p>
+              すべての求人が未経験者に門戸を開いているわけではありません。成功した人は、最初から「未経験歓迎」「経験不問」と明記されている求人に絞って応募していました。
+            </p>
+            <p>
+              特に以下の業界・職種は、未経験から挑戦しやすい傾向があります。
+            </p>
+            <ul>
+              <li>営業職（人柄重視で採用する企業が多い）</li>
+              <li>販売・サービス職（接客経験を活かせる）</li>
+              <li>ITエンジニア（研修制度が充実している企業も）</li>
+              <li>介護・福祉職（人手不足で採用意欲が高い）</li>
+            </ul>
+
+            <h4>よくある失敗パターンと対策</h4>
+
+            <h5>失敗1：経験がないことを言い訳にしてしまう</h5>
+            <p>
+              面接で「経験がないので…」と消極的な発言をすると、企業側も踏み切れません。経験がないのは事実ですが、その分「学ぶ意欲がある」「成長したい」という姿勢を前面に出すことが大切です。
+            </p>
+
+            <h5>失敗2：いきなり大手企業ばかり狙う</h5>
+            <p>
+              大手企業は応募者が多く、競争率も高くなります。未経験から挑戦する場合は、中小企業やベンチャー企業で経験を積んでからキャリアアップを目指すほうが現実的なケースもあります。
+            </p>
+
+            <h5>失敗3：一人で抱え込んでしまう</h5>
+            <p>
+              就職活動は孤独になりがちですが、一人で進めると視野が狭くなったり、モチベーションが下がったりしやすくなります。ハローワークや就職エージェントなど、サポートを受けられるサービスを積極的に活用しましょう。
+            </p>
+
+            <h4>まとめ</h4>
+            <p>
+              正社員経験がないからといって、就職をあきらめる必要はありません。20代であれば、多くの企業がポテンシャルを重視して採用しています。
+            </p>
+            <p>
+              大切なのは、これまでの経験を「仕事の実績」として伝えること。そして、「なぜ正社員として働きたいのか」を自分の言葉で説明できるようにしておくこと。この2つができれば、正社員への道は十分に開けます。
+            </p>
+            <p>
+              最初の一歩を踏み出すのには勇気がいるかもしれません。ただ、動かなければ何も変わりません。自分のペースで、できることから始めてみてください。
+            </p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- Writing Policy Section -->
+  <section style="background: #f5f5f5;">
+    <div class="container">
+      <h2>Writing Policy</h2>
+      <ul class="policy-list">
+        <li>読者の不安や疑問を具体的に言語化し、冒頭で受け止める</li>
+        <li>採用担当・企業側の視点も交え、双方向の理解を促す</li>
+        <li>SEOを前提としつつ、読みやすさと「次の行動につながる」構成を優先</li>
+        <li>編集者のフィードバックをもとに改善を重ねる</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; kamikagura.com - Web Design & Writing</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleArticle(btn) {
+      const content = btn.nextElementSibling;
+      content.classList.toggle('open');
+      btn.textContent = content.classList.contains('open') ? '本文を閉じる' : '本文を読む';
+    }
+  </script>
+
+</body>
+</html>

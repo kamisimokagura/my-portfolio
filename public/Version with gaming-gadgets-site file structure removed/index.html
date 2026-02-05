@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲームガジェットサイト </title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="CSS/styles.css">
+    <link rel="stylesheet" href="JS/script.js">
+</head>
+<body>
+    <!-- ==================== HTML STRUCTURE ==================== -->
+    
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="container">
+            <nav class="flex justify-between items-center py-4">
+                <div class="text-2xl font-bold text-purple-600">
+                    <i class="fas fa-gamepad mr-2"></i>
+                    GamingGadgets
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-page="home">
+                            <i class="fas fa-home mr-2"></i>ホーム
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="categories">
+                            <i class="fas fa-th-grid mr-2"></i>カテゴリー
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="special">
+                            <i class="fas fa-star mr-2"></i>特集
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="news">
+                            <i class="fas fa-newspaper mr-2"></i>ニュース
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="contact">
+                            <i class="fas fa-envelope mr-2"></i>お問い合わせ
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Home Page -->
+    <div id="home" class="page active">
+        <div class="container py-12">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-white mb-4">
+                    最新のおすすめゲームガジェット
+                </h1>
+                <p class="text-xl text-white opacity-90">
+                    注目のガジェットやゲーム周辺機器を画像や動画付きで紹介します
+                </p>
+            </div>
+            
+            <div class="category-grid">
+                <div class="gadget-card" onclick="openGadgetModal('gaming-mouse')">
+                    <div class="gadget-image">
+                        <i class="fas fa-mouse"></i>
+                    </div>
+                    <div class="gadget-content">
+                        <h3 class="gadget-title">ゲーミングマウス</h3>
+                        <p class="gadget-description">高DPI、RGBライティング搭載！FPSに最適。</p>
+                        <div class="gadget-price">¥8,980</div>
+                        <div class="gadget-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>(4.8/5)</span>
+                        </div>
+                        <button class="btn">
+                            <i class="fas fa-info-circle"></i>
+                            詳細を見る
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gadget-card" onclick="openGadgetModal('gaming-keyboard')">
+                    <div class="gadget-image">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <div class="gadget-content">
+                        <h3 class="gadget-title">ゲーミングキーボード</h3>
+                        <p class="gadget-description">メカニカルスイッチ採用、バックライト付き</p>
+                        <div class="gadget-price">¥12,800</div>
+                        <div class="gadget-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <span>(4.5/5)</span>
+                        </div>
+                        <button class="btn">
+                            <i class="fas fa-info-circle"></i>
+                            詳細を見る
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gadget-card" onclick="openGadgetModal('gaming-headset')">
+                    <div class="gadget-image">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <div class="gadget-content">
+                        <h3 class="gadget-title">ゲーミングヘッドセット</h3>
+                        <p class="gadget-description">7.1chサラウンド対応、ノイズキャンセリング機能</p>
+                        <div class="gadget-price">¥15,600</div>
+                        <div class="gadget-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>(4.9/5)</span>
+                        </div>
+                        <button class="btn">
+                            <i class="fas fa-info-circle"></i>
+                            詳細を見る
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Page -->
+    <div id="categories" class="page">
+        <div class="container py-12">
+            <h1 class="text-4xl font-bold text-white text-center mb-12">カテゴリー別おすすめ</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="gadget-card" onclick="showCategoryDetail('mouse')">
+                    <div class="gadget-image">
+                        <i class="fas fa-mouse text-6xl"></i>
+                    </div>
+                    <div class="gadget-content">
+                        <h3 class="gadget-title">ゲーミングマウス</h3>
+                        <p class="gadget-description">FPS・RPG・RTSに最適化されたゲーミングマウスの数々</p>
+                        <button class="btn">
+                            <i class="fas fa-arrow-right"></i>
+                            カテゴリーを見る
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gadget-card" onclick="showCategoryDetail('keyboard')">
+                    <div class="gadget-image">
+                        <i class="fas fa-keyboard text-6xl"></i>
+                    </div>
+                    <div class="gadget-content">
+                        <h3 class="gadget-title">ゲーミングキーボード</h3>
+                        <p class="gadget-description">メカニカル・光学式・無線対応キーボード</p>
+                        <button class="btn">
+                            <i class="fas fa-arrow-right"></i>
+                            カテゴリーを見る
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Detail Section -->
+            <div id="category-detail" class="mt-12" style="display: none;">
+                <div class="bg-white rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="category-title" class="text-3xl font-bold"></h2>
+                        <button onclick="hideCategoryDetail()" class="btn">
+                            <i class="fas fa-times"></i>
+                            閉じる
+                        </button>
+                    </div>
+                    <div id="category-content" class="category-grid">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Special Page -->
+    <div id="special" class="page">
+        <div class="container py-12">
+            <h1 class="text-4xl font-bold text-white text-center mb-12">2025年注目のガジェット特集</h1>
+            
+            <div class="special-banner">
+                <div class="special-content">
+                    <h2 class="text-3xl font-bold mb-4">🚀 次世代ゲーミング革命</h2>
+                    <p class="text-xl mb-6">AI搭載、没入型体験を実現する最新ガジェット</p>
+                    <button class="btn bg-white text-purple-600 hover:bg-gray-100" onclick="showSpecialDetail()">
+                        <i class="fas fa-play"></i>
+                        特集を見る
+                    </button>
+                </div>
+            </div>
+
+            <!-- Special Detail Section -->
+            <div id="special-detail" style="display: none;">
+                <div class="bg-white rounded-xl p-8 mt-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold">2025年注目ガジェット詳細</h2>
+                        <button onclick="hideSpecialDetail()" class="btn">
+                            <i class="fas fa-times"></i>
+                            閉じる
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="gadget-card">
+                            <div class="gadget-image">
+                                <i class="fas fa-brain text-purple-500"></i>
+                            </div>
+                            <div class="gadget-content">
+                                <h3 class="gadget-title">AI ゲーミングマウス</h3>
+                                <p class="gadget-description">プレイスタイルを学習し、自動で最適化</p>
+                                <div class="gadget-price">¥24,800</div>
+                                <div class="text-sm text-green-600 font-semibold mb-3">
+                                    <i class="fas fa-rocket"></i> 2025年春発売予定
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gadget-card">
+                            <div class="gadget-image">
+                                <i class="fas fa-vr-cardboard text-blue-500"></i>
+                            </div>
+                            <div class="gadget-content">
+                                <h3 class="gadget-title">没入型VRヘッドセット</h3>
+                                <p class="gadget-description">8K解像度、触覚フィードバック対応</p>
+                                <div class="gadget-price">¥89,800</div>
+                                <div class="text-sm text-green-600 font-semibold mb-3">
+                                    <i class="fas fa-rocket"></i> 2025年夏発売予定
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gadget-card">
+                            <div class="gadget-image">
+                                <i class="fas fa-wifi text-green-500"></i>
+                            </div>
+                            <div class="gadget-content">
+                                <h3 class="gadget-title">量子無線キーボード</h3>
+                                <p class="gadget-description">遅延ゼロ、バッテリー寿命1年</p>
+                                <div class="gadget-price">¥35,600</div>
+                                <div class="text-sm text-green-600 font-semibold mb-3">
+                                    <i class="fas fa-rocket"></i> 2025年秋発売予定
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Page -->
+    <div id="news" class="page">
+        <div class="container py-12">
+            <h1 class="text-4xl font-bold text-white text-center mb-12">最新ガジェットニュース</h1>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="news-item">
+                    <div class="news-date">2024年12月15日</div>
+                    <h3 class="news-title">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i>
+                        ガジェットA 発売決定！
+                    </h3>
+                    <p>次世代ゲーミングマウス「ガジェットA」の発売が正式に発表されました。AI搭載による自動調整機能が話題となっています。</p>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-date">2024年12月10日</div>
+                    <h3 class="news-title">
+                        <i class="fas fa-trophy text-gold mr-2"></i>
+                        eスポーツ対応機器まとめ
+                    </h3>
+                    <p>プロゲーマーが実際に使用している機器をまとめた特集記事を公開しました。勝利への秘訣が詰まった内容となっています。</p>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-date">2024年12月5日</div>
+                    <h3 class="news-title">
+                        <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                        ゲーミング市場が前年比150%成長
+                    </h3>
+                    <p>ゲーミングガジェット市場の急成長が続いています。特にワイヤレス機器の需要が高まっています。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact" class="page">
+        <div class="container py-12">
+            <h1 class="text-4xl font-bold text-white text-center mb-12">お問い合わせ</h1>
+            
+            <div class="contact-form">
+                <h2 class="text-2xl font-bold mb-6 text-center">
+                    <i class="fas fa-envelope text-purple-600 mr-2"></i>
+                    ご質問・ご要望をお聞かせください
+                </h2>
+                
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">お名前 *</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">メールアドレス *</label>
+                        <input type="email" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">件名</label>
+                        <input type="text" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">メッセージ *</label>
+                        <textarea class="form-textarea" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn text-lg px-8 py-3">
+                            <i class="fas fa-paper-plane"></i>
+                            送信する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Structure Page -->
+    <div id="file-structure" class="page">
+        <div class="container py-12">
+            <h1 class="text-4xl font-bold text-white text-center mb-12">ファイル構成</h1>
+            
+            <div class="file-structure">
+                <h3><i class="fas fa-folder-open mr-2"></i>プロジェクト構成</h3>
+                <div class="file-tree">
+                    gaming-gadgets-site/<br>
+                    ├── <span class="file">index.html</span> <span class="description">// メインHTMLファイル</span><br>
+                    ├── <span class="folder">css/</span><br>
+                    │   └── <span class="file">styles.css</span> <span class="description">// スタイルシート</span><br>
+                    ├── <span class="folder">js/</span><br>
+                    │   └── <span class="file">script.js</span> <span class="description">// JavaScript機能</span><br>
+                    ├── <span class="folder">images/</span><br>
+                    │   ├── <span class="file">gaming-mouse.jpg</span><br>
+                    │   ├── <span class="file">gaming-keyboard.jpg</span><br>
+                    │   └── <span class="file">gaming-headset.jpg</span><br>
+                    ├── <span class="folder">videos/</span><br>
+                    │   ├── <span class="file">mouse-demo.mp4</span><br>
+                    │   └── <span class="file">keyboard-demo.mp4</span><br>
+                    └── <span class="file">README.md</span> <span class="description">// プロジェクト説明</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-8 mt-8">
+                <h2 class="text-2xl font-bold mb-6">ファイル分割の詳細</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-3 text-red-600">
+                            <i class="fab fa-html5 mr-2"></i>index.html
+                        </h3>
+                        <ul class="text-sm space-y-2">
+                            <li>• ページ構造の定義</li>
+                            <li>• ナビゲーション</li>
+                            <li>• コンテンツエリア</li>
+                            <li>• モーダル構造</li>
+                            <li>• フォーム要素</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-3 text-blue-600">
+                            <i class="fab fa-css3-alt mr-2"></i>styles.css
+                        </h3>
+                        <ul class="text-sm space-y-2">
+                            <li>• レスポンシブデザイン</li>
+                            <li>• アニメーション効果</li>
+                            <li>• カードスタイル</li>
+                            <li>• モーダルスタイル</li>
+                            <li>• グラデーション</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-3 text-yellow-600">
+                            <i class="fab fa-js-square mr-2"></i>script.js
+                        </h3>
+                        <ul class="text-sm space-y-2">
+                            <li>• ページ切り替え機能</li>
+                            <li>• モーダル制御</li>
+                            <li>• イベントハンドリング</li>
+                            <li>• 動的コンテンツ生成</li>
+                            <li>• フォーム処理</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-6 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                        実装のポイント
+                    </h3>
+                    <ul class="space-y-2">
+                        <li><strong>モジュール化:</strong> 各機能を独立したファイルに分割</li>
+                        <li><strong>再利用性:</strong> 共通コンポーネントの活用</li>
+                        <li><strong>保守性:</strong> 明確なファイル構造とコメント</li>
+                        <li><strong>パフォーマンス:</strong> CSS・JSの最適化</li>
+                        <li><strong>SEO対応:</strong> セマンティックHTML構造</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Gadget Details -->
+    <div id="gadget-modal" class="modal">
+        <div class="modal-content p-8">
+            <button class="modal-close" onclick="closeGadgetModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-content">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</body>
+<script src="JS/script.js"></script>
+</html>
