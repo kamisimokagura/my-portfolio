@@ -28,5 +28,5 @@
     "types": ["vite/client", "node"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", "public"]
+  "exclude": ["node_modules", "dist", "public/**"]
 }
