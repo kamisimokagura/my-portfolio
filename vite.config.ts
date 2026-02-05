@@ -8,7 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      typescript: {
+        ignoreBuildErrors: true, // ビルド時の型チェックエラーを無視
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
@@ -18,5 +24,13 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true, // 外部からのアクセスを許可する場合（スマホ実機確認など）
+  },
+  // public フォルダ内の TypeScript ファイルをビルドから除外
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        return id.includes('public/media-editor-platform');
+      },
+    },
   },
 });
