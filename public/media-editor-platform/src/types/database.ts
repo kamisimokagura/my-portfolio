@@ -9,7 +9,7 @@ export type Json =
 export type SubscriptionTier = 'free' | 'pro' | 'business' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid';
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -61,6 +61,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       projects: {
         Row: {
@@ -99,6 +100,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'projects_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       media_files: {
         Row: {
@@ -140,6 +150,22 @@ export interface Database {
           metadata?: Json;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'media_files_project_id_fkey';
+            columns: ['project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'media_files_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       processing_jobs: {
         Row: {
@@ -187,6 +213,15 @@ export interface Database {
           completed_at?: string | null;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'processing_jobs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       subscription_plans: {
         Row: {
@@ -228,20 +263,18 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      [_ in never]: never;
-    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Enums: {
       subscription_tier: SubscriptionTier;
       subscription_status: SubscriptionStatus;
     };
+    CompositeTypes: Record<string, never>;
   };
-}
+};
 
 // Helper types
 export type Tables<T extends keyof Database['public']['Tables']> =

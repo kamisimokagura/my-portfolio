@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const supabase = getSupabaseClient();
 
-  const fetchDbUser = useCallback(async (userId: string) => {
+  const fetchDbUser = useCallback(async (userId: string): Promise<DbUser | null> => {
     try {
       const { data, error } = await supabase
         .from("users")
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      return data;
+      return data as DbUser | null;
     } catch (err) {
       console.error("Error in fetchDbUser:", err);
       return null;
