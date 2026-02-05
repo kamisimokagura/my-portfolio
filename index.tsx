@@ -28,7 +28,7 @@ const projects: Project[] = [
     category: "AI-driven Development (under development) / media-editor-platform",
     type: "AI-driven Development (under development)",
     image: "images/K.png",
-    link: "http://localhost:3000",  // Next.js なので別サーバーで起動。デプロイ後は本番URLに変更
+    link: "https://media-editor-platform.vercel.app",  // Next.js なので別サーバーで起動。デプロイ後は本番URLに変更
     year: "2026"
   },
   {
