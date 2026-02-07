@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npx vite build)",
+      "Bash(npx vercel logs:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix TypeScript build errors for Vercel deployment\n\n- Add .vercelignore to exclude media-editor-platform source files\n- Add .npmrc with legacy-peer-deps and ignore-scripts\n- Update tsconfig.json to explicitly exclude public folder\n- Fix media-editor-platform TypeScript configuration \\(strict: false\\)\n- Fix Supabase Database type with Relationships property\n- Fix AuthProvider fetchDbUser return type\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(gh repo create:*)",
+      "Bash(where:*)",
+      "Bash(git init:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)",
+      "Bash(git mv:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tasklist:*)"
+    ]
+  }
+}
