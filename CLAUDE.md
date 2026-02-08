@@ -132,14 +132,16 @@ export async function proxy(request) {
 }
 ```
 
-#### libraw-wasm には serverExternalPackages が必要
+#### heic2any/libraw-wasm は Turbopack ビルドをハングさせる
 ```typescript
-// next.config.ts に追加
-const nextConfig = {
-  serverExternalPackages: ["libraw-wasm"],
-  // ...
-};
+// ❌ npm パッケージとしてインポートするとビルドが無限にハングする
+import { isHeicFile } from "@/lib/heicConverter";  // heic2any を使用
+import { isRawFile } from "@/lib/rawConverter";      // libraw-wasm を使用
+
+// ✅ CDN ベースの動的ロードで回避する（将来実装予定）
+// または import を完全にコメントアウトしてビルドを通す
 ```
+`serverExternalPackages` でも解決しない。Turbopack が WASM バンドル解析で無限ループに陥る。
 
 ### 環境 & ビルドの教訓
 
@@ -170,6 +172,10 @@ Git Bash で `> nul` を使うとファイルが作成される。`> /dev/null` 
 public/media-editor-platform/src
 public/media-editor-platform/node_modules
 ```
+
+#### Vercel デプロイ時のキュー詰まり
+Git push で自動デプロイがトリガーされ「Building」でハングするとキューが詰まる。
+`npx vercel rm <deployment-url> --yes` で詰まったデプロイを削除すること。
 
 ---
 
@@ -229,3 +235,4 @@ public/media-editor-platform/node_modules
 |------|-----------|------|
 | 2025-02-05 | 1.0.0 | 初版作成 |
 | 2026-02-08 | 1.1.0 | 環境 & ビルドの教訓追加、portfolio-v3 へ移行 |
+| 2026-02-08 | 1.1.1 | HEIC/RAW Turbopack ハング問題、Vercel キュー詰まり対策追加 |
