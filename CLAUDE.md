@@ -1,8 +1,8 @@
 ---
 title: CLAUDE.md - AI Development Rules & Guidelines
 created: 2025-02-05
-updated: 2025-02-05
-version: 1.0.0
+updated: 2026-02-08
+version: 1.1.0
 ---
 
 # CLAUDE.md - プロジェクト開発ルール
@@ -119,6 +119,49 @@ const nextConfig = {
 };
 ```
 
+#### proxy.ts で setInterval を使わない
+```typescript
+// ❌ ビルドがハングする原因
+setInterval(() => { /* cleanup */ }, 60000);
+
+// ✅ リクエスト毎にクリーンアップ関数を呼ぶ
+function cleanupRateLimits() { /* cleanup */ }
+export async function proxy(request) {
+  cleanupRateLimits();
+  // ...
+}
+```
+
+#### libraw-wasm には serverExternalPackages が必要
+```typescript
+// next.config.ts に追加
+const nextConfig = {
+  serverExternalPackages: ["libraw-wasm"],
+  // ...
+};
+```
+
+### 環境 & ビルドの教訓
+
+#### OneDrive フォルダに Node.js プロジェクトを配置しない
+ファイル同期のオーバーヘッドで `next build` がハングする。
+ローカルディスクパス（例: `C:\Work-Production-Creation-Development\`）を使用すること。
+
+#### 日本語フォルダ名をプロジェクトパスに使わない
+cp932/UTF-8 エンコーディング問題が CLI ツール（git, npm, node）で発生する。
+プロジェクトディレクトリは英語名のみ使用すること。
+
+#### WASM パッケージ追加後は即ビルド検証
+`@ffmpeg/ffmpeg`, `heic2any`, `libraw-wasm` 等の追加後は必ず:
+1. `npx tsc --noEmit` (型チェック)
+2. `npm run build` (ビルド検証)
+
+#### ファイルリネーム前にビルドで検証
+`middleware.ts` → `proxy.ts` のようなリネームは、ドキュメント更新前にビルド出力で正しさを確認すること。
+
+#### Windows の `nul` ファイルアーティファクト
+Git Bash で `> nul` を使うとファイルが作成される。`> /dev/null` を使用すること。
+
 ### Vercel デプロイエラー
 
 #### public フォルダ内の TypeScript チェック
@@ -185,3 +228,4 @@ public/media-editor-platform/node_modules
 | 日付 | バージョン | 内容 |
 |------|-----------|------|
 | 2025-02-05 | 1.0.0 | 初版作成 |
+| 2026-02-08 | 1.1.0 | 環境 & ビルドの教訓追加、portfolio-v3 へ移行 |
