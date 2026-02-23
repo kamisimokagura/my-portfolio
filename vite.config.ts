@@ -25,12 +25,5 @@ export default defineConfig({
     port: 3000,
     host: true, // 外部からのアクセスを許可する場合（スマホ実機確認など）
   },
-  // public フォルダ内の TypeScript ファイルをビルドから除外
-  build: {
-    rollupOptions: {
-      external: (id) => {
-        return id.includes('public/media-editor-platform');
-      },
-    },
-  },
+  build: {},
 });

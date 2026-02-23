@@ -1,10 +1,1 @@
-# Ignore media-editor-platform source files (it's a separate Next.js project)
-public/media-editor-platform/src
-public/media-editor-platform/node_modules
-public/media-editor-platform/.next
-public/media-editor-platform/package.json
-public/media-editor-platform/package-lock.json
-public/media-editor-platform/tsconfig.json
-public/media-editor-platform/next.config.ts
-public/media-editor-platform/tailwind.config.ts
-public/media-editor-platform/postcss.config.mjs
+# No special ignores needed
