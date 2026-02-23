@@ -164,6 +164,43 @@ cp932/UTF-8 エンコーディング問題が CLI ツール（git, npm, node）�
 #### Windows の `nul` ファイルアーティファクト
 Git Bash で `> nul` を使うとファイルが作成される。`> /dev/null` を使用すること。
 
+### CSS / Tailwind エラー
+
+#### Tailwind CSS v4 で `@layer` 外のグローバルリセットがユーティリティを無効化する
+```css
+/* ❌ @layer外の * リセットは、Tailwind v4のユーティリティ（@layer utilities内）より
+   常に優先される。mx-auto, px-8, py-4 等すべてのpadding/marginユーティリティが効かなくなる */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* ✅ @layer base で囲めば、Tailwind @layer utilities が正しく上書きできる */
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+}
+```
+Tailwind v4 (`@import "tailwindcss"`) ではユーティリティが `@layer utilities` に入る。
+CSS Cascade規則: レイヤー外スタイル > レイヤー内スタイル（詳細度に関係なく）。
+globals.css のベーススタイルは必ず `@layer base` で囲むこと。
+
+### デプロイ & ディレクトリの教訓
+
+#### 変更するファイルのデプロイ先を必ず確認する
+```
+# ❌ dist/ に変更しても本番に反映されない（Vercelがデプロイするのはpublic/）
+portfolio-v3/dist/media-editor-platform/   ← 開発用コピー
+portfolio-v3/public/media-editor-platform/ ← Vercelデプロイ対象（git追跡）
+
+# ✅ 必ずデプロイ対象ディレクトリ（public/）を変更し、dist/にも同期する
+```
+変更前に `git ls-files` や Vercel の設定でどのディレクトリがデプロイされるか確認すること。
+
 ### Vercel デプロイエラー
 
 #### public フォルダ内の TypeScript チェック
@@ -236,3 +273,4 @@ Git push で自動デプロイがトリガーされ「Building」でハングす
 | 2025-02-05 | 1.0.0 | 初版作成 |
 | 2026-02-08 | 1.1.0 | 環境 & ビルドの教訓追加、portfolio-v3 へ移行 |
 | 2026-02-08 | 1.1.1 | HEIC/RAW Turbopack ハング問題、Vercel キュー詰まり対策追加 |
+| 2026-02-16 | 1.2.0 | Tailwind v4 @layer cascade問題、デプロイ先ディレクトリ確認ルール追加 |

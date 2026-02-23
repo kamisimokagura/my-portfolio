@@ -135,7 +135,7 @@ export function DropZone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`
-        relative group cursor-pointer
+        relative isolate group cursor-pointer overflow-hidden w-full
         border-2 border-dashed rounded-2xl
         transition-all duration-300 ease-out
         bg-white dark:bg-dark-800
@@ -148,9 +148,10 @@ export function DropZone({
     >
       {/* Gradient border effect on hover */}
       <div className={`
-        absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500
-        opacity-0 blur transition-opacity duration-300
-        ${isDragging ? "opacity-30" : "group-hover:opacity-20"}
+        pointer-events-none absolute inset-[2px] rounded-[14px]
+        bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20
+        opacity-0 transition-opacity duration-300
+        ${isDragging ? "opacity-100" : "group-hover:opacity-70"}
       `} />
 
       <input
@@ -161,7 +162,7 @@ export function DropZone({
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
       />
 
-      <div className="relative flex flex-col items-center justify-center py-10 px-6">
+      <div className="relative flex w-full flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
         {/* Animated icon */}
         <div className={`
           relative mb-6 transition-transform duration-300
@@ -239,7 +240,7 @@ export function DropZone({
 
         {/* Animated upload hint when dragging */}
         {isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/20 rounded-2xl backdrop-blur-sm">
+          <div className="absolute inset-[2px] flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/20 rounded-[14px]">
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
                 <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

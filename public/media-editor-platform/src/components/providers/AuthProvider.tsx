@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, Provider } from "@supabase/supabase-js";
 import type { User as DbUser, SubscriptionTier } from "@/types/database";
 
 interface AuthContextType {
@@ -11,14 +11,60 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   subscriptionTier: SubscriptionTier;
-  signIn: (provider: string) => Promise<void>;
+  signIn: (provider: string, callbackPath?: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName?: string
+  ) => Promise<{ requiresEmailVerification: boolean }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
+
+function normalizeOrigin(candidate: string | undefined | null): string | null {
+  if (!candidate) return null;
+  try {
+    return new URL(candidate).origin;
+  } catch {
+    return null;
+  }
+}
+
+function isLocalOrigin(origin: string): boolean {
+  try {
+    return LOCAL_HOSTNAMES.has(new URL(origin).hostname);
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeCallbackPath(path: string | undefined): string {
+  const trimmed = path?.trim();
+  if (!trimmed || trimmed === "/") return "/";
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return "/";
+  return trimmed;
+}
+
+function buildAuthCallbackUrl(callbackPath?: string): string {
+  const browserOrigin = window.location.origin;
+  const envOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  const preferredOrigin =
+    isLocalOrigin(browserOrigin) && envOrigin && !isLocalOrigin(envOrigin)
+      ? envOrigin
+      : browserOrigin;
+
+  const callbackUrl = new URL("/auth/callback", preferredOrigin);
+  const nextPath = sanitizeCallbackPath(callbackPath);
+  if (nextPath !== "/") {
+    callbackUrl.searchParams.set("next", nextPath);
+  }
+  return callbackUrl.toString();
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -106,12 +152,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [supabase, fetchDbUser]);
 
-  const signIn = async (provider: string) => {
+  const signIn = async (provider: string, callbackPath?: string) => {
     try {
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const redirectTo = buildAuthCallbackUrl(callbackPath);
+      const normalizedProvider = provider as Provider;
 
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: provider as any,
+        provider: normalizedProvider,
         options: {
           redirectTo,
           scopes: getProviderScopes(provider),
@@ -145,20 +192,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: buildAuthCallbackUrl("/"),
         },
       });
 
       if (error) {
         throw error;
       }
+
+      return {
+        requiresEmailVerification: !data.session,
+      };
     } catch (error) {
       console.error("Sign up error:", error);
       throw error;
@@ -209,12 +260,8 @@ function getProviderScopes(provider: string): string | undefined {
   switch (provider) {
     case "google":
       return "email profile";
-    case "facebook":
-      return "email public_profile";
     case "github":
       return "read:user user:email";
-    case "twitter":
-      return "users.read tweet.read";
     default:
       return undefined;
   }

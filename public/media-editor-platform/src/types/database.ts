@@ -223,6 +223,68 @@ export type Database = {
           }
         ];
       };
+      analytics_events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          session_id: string | null;
+          event_name: string;
+          event_category: string | null;
+          event_params: Json;
+          page_path: string | null;
+          referrer: string | null;
+          utm_source: string | null;
+          utm_medium: string | null;
+          utm_campaign: string | null;
+          device_type: string | null;
+          browser: string | null;
+          country: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          session_id?: string | null;
+          event_name: string;
+          event_category?: string | null;
+          event_params?: Json;
+          page_path?: string | null;
+          referrer?: string | null;
+          utm_source?: string | null;
+          utm_medium?: string | null;
+          utm_campaign?: string | null;
+          device_type?: string | null;
+          browser?: string | null;
+          country?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          session_id?: string | null;
+          event_name?: string;
+          event_category?: string | null;
+          event_params?: Json;
+          page_path?: string | null;
+          referrer?: string | null;
+          utm_source?: string | null;
+          utm_medium?: string | null;
+          utm_campaign?: string | null;
+          device_type?: string | null;
+          browser?: string | null;
+          country?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'analytics_events_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       subscription_plans: {
         Row: {
           id: string;
@@ -289,4 +351,5 @@ export type User = Tables<'users'>;
 export type Project = Tables<'projects'>;
 export type MediaFile = Tables<'media_files'>;
 export type ProcessingJob = Tables<'processing_jobs'>;
+export type AnalyticsEvent = Tables<'analytics_events'>;
 export type SubscriptionPlan = Tables<'subscription_plans'>;

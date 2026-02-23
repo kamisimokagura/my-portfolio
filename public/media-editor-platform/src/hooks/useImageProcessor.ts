@@ -33,6 +33,8 @@ export function useImageProcessor() {
   const {
     originalImageData,
     setOriginalImageData,
+    setInitialImageData,
+    initialImageData,
     imageAdjustments,
     setProcessingState,
   } = useEditorStore();
@@ -56,8 +58,18 @@ export function useImageProcessor() {
         canvas.height
       );
       setOriginalImageData(imageData);
+
+      // Store initial image data for full reset (only on first load)
+      if (!initialImageData) {
+        const initialData = new ImageData(
+          new Uint8ClampedArray(imageData.data),
+          imageData.width,
+          imageData.height,
+        );
+        setInitialImageData(initialData);
+      }
     },
-    [setOriginalImageData]
+    [setOriginalImageData, setInitialImageData, initialImageData]
   );
 
   // RGB to HSL conversion

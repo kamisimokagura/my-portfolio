@@ -1,26 +1,25 @@
 /**
- * RAW画像変換ユーティリティ
- * デジタルカメラのRAWファイル(CR2, NEF, ARW, DNG等)をブラウザ互換のPNG形式に変換
- * libraw-wasmはdynamic importで遅延読み込み
+ * RAW image converter utilities.
+ * Loads libraw-wasm from /public/vendor at runtime to avoid Turbopack package graph issues.
  */
 
 const RAW_EXTENSIONS = [
-  ".cr2", ".cr3",     // Canon
-  ".nef", ".nrw",     // Nikon
+  ".cr2", ".cr3", // Canon
+  ".nef", ".nrw", // Nikon
   ".arw", ".sr2", ".srf", // Sony
-  ".dng",             // Adobe DNG
-  ".rw2",             // Panasonic
-  ".orf",             // Olympus
-  ".raf",             // Fuji
-  ".pef",             // Pentax
-  ".srw",             // Samsung
-  ".raw",             // Generic RAW
-  ".3fr",             // Hasselblad
-  ".kdc", ".dcr",     // Kodak
-  ".mrw",             // Minolta
-  ".rwl",             // Leica
-  ".x3f",             // Sigma
-  ".erf",             // Epson
+  ".dng", // Adobe DNG
+  ".rw2", // Panasonic
+  ".orf", // Olympus
+  ".raf", // Fuji
+  ".pef", // Pentax
+  ".srw", // Samsung
+  ".raw", // Generic RAW
+  ".3fr", // Hasselblad
+  ".kdc", ".dcr", // Kodak
+  ".mrw", // Minolta
+  ".rwl", // Leica
+  ".x3f", // Sigma
+  ".erf", // Epson
 ];
 
 const RAW_MIME_TYPES = [
@@ -37,9 +36,45 @@ const RAW_MIME_TYPES = [
   "image/x-dcraw",
 ];
 
+const LIBRAW_MODULE_PATH = "/vendor/libraw-wasm/index.js";
+
+type RawImageData = {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+};
+
+type LibRawInstance = {
+  open(input: Uint8Array): Promise<void>;
+  imageData(): Promise<RawImageData>;
+  close(): void;
+};
+
+type LibRawConstructor = new () => LibRawInstance;
+
+let libRawLoaderPromise: Promise<LibRawConstructor> | null = null;
+
+async function loadLibRaw(): Promise<LibRawConstructor> {
+  if (typeof window === "undefined") {
+    throw new Error("libraw-wasm can only be loaded in the browser");
+  }
+
+  if (!libRawLoaderPromise) {
+    const moduleUrl = new URL(LIBRAW_MODULE_PATH, window.location.origin).toString();
+    libRawLoaderPromise = import(/* webpackIgnore: true */ moduleUrl).then((mod) => {
+      const maybeCtor = (mod as { default?: unknown }).default;
+      if (typeof maybeCtor !== "function") {
+        throw new Error("Invalid libraw module: default export is missing");
+      }
+      return maybeCtor as LibRawConstructor;
+    });
+  }
+
+  return libRawLoaderPromise;
+}
+
 /**
- * ファイルがRAW画像かどうかを判定
- * MIME typeと拡張子の両方でチェック
+ * Detect whether a file is a RAW format by MIME type or extension.
  */
 export function isRawFile(file: File): boolean {
   if (RAW_MIME_TYPES.includes(file.type)) {
@@ -50,11 +85,10 @@ export function isRawFile(file: File): boolean {
 }
 
 /**
- * RAWファイルをPNG Blobに変換
- * libraw-wasmを使用してデコード後、Canvasで画像生成
+ * Convert RAW file into PNG Blob.
  */
 export async function convertRawToBlob(file: File): Promise<Blob> {
-  const LibRaw = (await import("libraw-wasm")).default;
+  const LibRaw = await loadLibRaw();
 
   const arrayBuffer = await file.arrayBuffer();
   const raw = new LibRaw();
@@ -63,7 +97,6 @@ export async function convertRawToBlob(file: File): Promise<Blob> {
     await raw.open(new Uint8Array(arrayBuffer));
     const imageData = await raw.imageData();
 
-    // Canvas経由でPNG Blobに変換
     const canvas = document.createElement("canvas");
     canvas.width = imageData.width;
     canvas.height = imageData.height;
@@ -95,8 +128,7 @@ export async function convertRawToBlob(file: File): Promise<Blob> {
 }
 
 /**
- * RAWファイルをブラウザ互換のFileオブジェクトに変換
- * RAWでなければそのまま返す
+ * Convert RAW file into a browser-compatible PNG file.
  */
 export async function ensureBrowserCompatibleRawImage(file: File): Promise<File> {
   if (!isRawFile(file)) {

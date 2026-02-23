@@ -31,6 +31,9 @@ interface EditorState {
   currentImage: MediaFile | null;
   imageAdjustments: ImageAdjustments;
   originalImageData: ImageData | null;
+  initialImageData: ImageData | null;
+  adjustmentHistory: ImageAdjustments[];
+  historyIndex: number;
 
   // Processing
   processingState: ProcessingState;
@@ -69,7 +72,10 @@ interface EditorState {
   setCurrentImage: (image: MediaFile | null) => void;
   setImageAdjustments: (adjustments: Partial<ImageAdjustments>) => void;
   resetImageAdjustments: () => void;
+  fullResetImage: () => void;
+  undoImageAdjustment: () => void;
   setOriginalImageData: (data: ImageData | null) => void;
+  setInitialImageData: (data: ImageData | null) => void;
 
   // Processing actions
   setProcessingState: (state: Partial<ProcessingState>) => void;
@@ -127,6 +133,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentImage: null,
   imageAdjustments: { ...defaultAdjustments },
   originalImageData: null,
+  initialImageData: null,
+  adjustmentHistory: [{ ...defaultAdjustments }],
+  historyIndex: 0,
   processingState: {
     status: "idle",
     progress: 0,
@@ -373,21 +382,76 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       currentImage: image,
       imageAdjustments: { ...defaultAdjustments },
       originalImageData: null,
+      initialImageData: null,
+      adjustmentHistory: [{ ...defaultAdjustments }],
+      historyIndex: 0,
     });
   },
 
   setImageAdjustments: (adjustments) => {
-    set((state) => ({
-      imageAdjustments: { ...state.imageAdjustments, ...adjustments },
-    }));
+    set((state) => {
+      const newAdjustments = { ...state.imageAdjustments, ...adjustments };
+      const newHistory = [
+        ...state.adjustmentHistory.slice(0, state.historyIndex + 1),
+        newAdjustments,
+      ];
+      // Keep max 50 history entries
+      if (newHistory.length > 50) newHistory.shift();
+      return {
+        imageAdjustments: newAdjustments,
+        adjustmentHistory: newHistory,
+        historyIndex: newHistory.length - 1,
+      };
+    });
   },
 
   resetImageAdjustments: () => {
-    set({ imageAdjustments: { ...defaultAdjustments } });
+    const { initialImageData } = get();
+    set({
+      imageAdjustments: { ...defaultAdjustments },
+      originalImageData: initialImageData ? new ImageData(
+        new Uint8ClampedArray(initialImageData.data),
+        initialImageData.width,
+        initialImageData.height,
+      ) : get().originalImageData,
+      adjustmentHistory: [{ ...defaultAdjustments }],
+      historyIndex: 0,
+    });
+  },
+
+  fullResetImage: () => {
+    const { initialImageData } = get();
+    if (initialImageData) {
+      set({
+        imageAdjustments: { ...defaultAdjustments },
+        originalImageData: new ImageData(
+          new Uint8ClampedArray(initialImageData.data),
+          initialImageData.width,
+          initialImageData.height,
+        ),
+        adjustmentHistory: [{ ...defaultAdjustments }],
+        historyIndex: 0,
+      });
+    }
+  },
+
+  undoImageAdjustment: () => {
+    set((state) => {
+      if (state.historyIndex <= 0) return state;
+      const newIndex = state.historyIndex - 1;
+      return {
+        imageAdjustments: { ...state.adjustmentHistory[newIndex] },
+        historyIndex: newIndex,
+      };
+    });
   },
 
   setOriginalImageData: (data) => {
     set({ originalImageData: data });
+  },
+
+  setInitialImageData: (data) => {
+    set({ initialImageData: data });
   },
 
   // Processing actions

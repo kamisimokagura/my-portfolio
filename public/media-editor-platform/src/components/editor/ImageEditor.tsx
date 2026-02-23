@@ -6,36 +6,93 @@ import { useImageProcessor } from "@/hooks/useImageProcessor";
 import { Button, Slider, DropZone, ProgressBar, Modal } from "@/components/ui";
 import { toast } from "@/stores/toastStore";
 import { v4 as uuidv4 } from "uuid";
-// TODO: Re-enable when CDN-based loading is implemented (heic2any/libraw-wasm cause Turbopack build hang)
-// import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
-// import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+import { ANALYTICS_EVENTS, trackClientEvent } from "@/lib/analytics/client";
 import type { MediaFile } from "@/types";
 
-type EditorTab = "adjust" | "crop" | "resize" | "filters" | "ai";
+type EditorTab = "adjust" | "crop" | "resize" | "filters" | "tools";
 type CropAspectRatio = "free" | "1:1" | "4:3" | "16:9" | "9:16" | "3:2";
+type FilterCategory = "all" | "basic" | "film" | "bw" | "color" | "creative";
 
-// Preset filters configuration
-const PRESET_FILTERS = [
-  { id: "none", name: "オリジナル", adjustments: {} },
-  { id: "vintage", name: "ビンテージ", adjustments: { brightness: -5, contrast: 10, saturation: -30, exposure: -10 } },
-  { id: "bw", name: "モノクロ", adjustments: { saturation: -100 } },
-  { id: "warm", name: "ウォーム", adjustments: { brightness: 5, saturation: 20, exposure: 5 } },
-  { id: "cool", name: "クール", adjustments: { brightness: -5, saturation: -10, contrast: 10 } },
-  { id: "dramatic", name: "ドラマチック", adjustments: { contrast: 30, saturation: -20, shadows: -20, highlights: 20 } },
-  { id: "fade", name: "フェード", adjustments: { contrast: -20, brightness: 10, saturation: -20 } },
-  { id: "vivid", name: "ビビッド", adjustments: { saturation: 40, contrast: 20 } },
-  { id: "sepia", name: "セピア", adjustments: { saturation: -80, brightness: 5 } },
-  { id: "hdr", name: "HDR風", adjustments: { contrast: 25, saturation: 15, highlights: -30, shadows: 30, sharpness: 20 } },
+interface ImageEditorProps {
+  initialTab?: EditorTab;
+  autoOpenExport?: boolean;
+}
+
+// Expanded preset filters - 25+ professional filters with gradient previews
+const PRESET_FILTERS: { id: string; name: string; category: FilterCategory; gradient: string; adjustments: Record<string, number> }[] = [
+  // Basic
+  { id: "none", name: "オリジナル", category: "basic", gradient: "from-gray-300 to-gray-400", adjustments: {} },
+  { id: "auto", name: "オート補正", category: "basic", gradient: "from-blue-300 to-indigo-400", adjustments: { brightness: 5, contrast: 10, saturation: 10, sharpness: 10 } },
+  { id: "vivid", name: "ビビッド", category: "basic", gradient: "from-rose-400 to-violet-500", adjustments: { saturation: 40, contrast: 20 } },
+  { id: "soft", name: "ソフト", category: "basic", gradient: "from-pink-200 to-blue-200", adjustments: { contrast: -15, brightness: 8, blur: 5 } },
+
+  // Film
+  { id: "vintage", name: "ビンテージ", category: "film", gradient: "from-amber-600 to-yellow-800", adjustments: { brightness: -5, contrast: 10, saturation: -30, exposure: -10 } },
+  { id: "kodak", name: "Kodak風", category: "film", gradient: "from-yellow-400 to-red-500", adjustments: { brightness: 5, contrast: 8, saturation: 15, highlights: 10, shadows: -10 } },
+  { id: "fuji", name: "Fuji風", category: "film", gradient: "from-green-400 to-emerald-600", adjustments: { saturation: 20, contrast: 15, highlights: -5, shadows: 10 } },
+  { id: "portra", name: "Portra風", category: "film", gradient: "from-rose-300 to-amber-300", adjustments: { brightness: 3, contrast: -5, saturation: -10, exposure: 5, highlights: 15 } },
+  { id: "cinematic", name: "シネマ", category: "film", gradient: "from-slate-700 to-blue-900", adjustments: { contrast: 25, saturation: -15, brightness: -8, highlights: -10, shadows: -20 } },
+  { id: "fade", name: "フェード", category: "film", gradient: "from-gray-300 to-slate-400", adjustments: { contrast: -20, brightness: 10, saturation: -20 } },
+  { id: "grain", name: "グレイン", category: "film", gradient: "from-stone-500 to-stone-700", adjustments: { contrast: 15, saturation: -25, brightness: -3, sharpness: 30 } },
+
+  // B&W
+  { id: "bw", name: "モノクロ", category: "bw", gradient: "from-gray-400 to-gray-800", adjustments: { saturation: -100 } },
+  { id: "bw-high", name: "ハイコン白黒", category: "bw", gradient: "from-white to-black", adjustments: { saturation: -100, contrast: 40, brightness: -5 } },
+  { id: "bw-soft", name: "ソフト白黒", category: "bw", gradient: "from-gray-300 to-gray-500", adjustments: { saturation: -100, contrast: -10, brightness: 10 } },
+  { id: "sepia", name: "セピア", category: "bw", gradient: "from-amber-300 to-amber-700", adjustments: { saturation: -80, brightness: 5 } },
+  { id: "noir", name: "ノワール", category: "bw", gradient: "from-gray-900 to-black", adjustments: { saturation: -100, contrast: 50, brightness: -15, shadows: -30, highlights: 20 } },
+
+  // Color
+  { id: "warm", name: "ウォーム", category: "color", gradient: "from-orange-300 to-rose-400", adjustments: { brightness: 5, saturation: 20, exposure: 5 } },
+  { id: "cool", name: "クール", category: "color", gradient: "from-cyan-300 to-blue-500", adjustments: { brightness: -5, saturation: -10, contrast: 10 } },
+  { id: "sunset", name: "サンセット", category: "color", gradient: "from-orange-400 to-pink-600", adjustments: { brightness: 8, saturation: 30, contrast: 10, highlights: 15 } },
+  { id: "ocean", name: "オーシャン", category: "color", gradient: "from-teal-400 to-blue-600", adjustments: { saturation: 15, brightness: -5, contrast: 15, shadows: 10 } },
+  { id: "forest", name: "フォレスト", category: "color", gradient: "from-green-500 to-emerald-800", adjustments: { saturation: 25, contrast: 10, brightness: -3, shadows: 5 } },
+  { id: "lavender", name: "ラベンダー", category: "color", gradient: "from-purple-300 to-violet-400", adjustments: { saturation: -15, brightness: 10, contrast: -5, exposure: 5 } },
+
+  // Creative
+  { id: "dramatic", name: "ドラマチック", category: "creative", gradient: "from-red-800 to-gray-900", adjustments: { contrast: 30, saturation: -20, shadows: -20, highlights: 20 } },
+  { id: "hdr", name: "HDR風", category: "creative", gradient: "from-blue-500 to-purple-600", adjustments: { contrast: 25, saturation: 15, highlights: -30, shadows: 30, sharpness: 20 } },
+  { id: "glow", name: "グロー", category: "creative", gradient: "from-yellow-200 to-pink-300", adjustments: { brightness: 15, contrast: -10, saturation: 10, blur: 8 } },
+  { id: "punch", name: "パンチ", category: "creative", gradient: "from-red-500 to-orange-600", adjustments: { contrast: 35, saturation: 25, sharpness: 25, brightness: -5 } },
+  { id: "lomo", name: "ロモ", category: "creative", gradient: "from-indigo-600 to-pink-500", adjustments: { contrast: 30, saturation: 20, brightness: -10, shadows: -25 } },
 ];
 
-export function ImageEditor() {
+const FILTER_CATEGORIES: { id: FilterCategory; label: string }[] = [
+  { id: "all", label: "すべて" },
+  { id: "basic", label: "基本" },
+  { id: "film", label: "フィルム" },
+  { id: "bw", label: "白黒" },
+  { id: "color", label: "カラー" },
+  { id: "creative", label: "クリエイティブ" },
+];
+
+export function ImageEditor({
+  initialTab = "adjust",
+  autoOpenExport = false,
+}: ImageEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const cropOverlayRef = useRef<HTMLDivElement>(null);
+  const autoExportOpenedRef = useRef(false);
 
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState<EditorTab>("adjust");
+  const [activeTab, setActiveTab] = useState<EditorTab>(initialTab);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+
+  // Filter state
+  const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
+  const [filterIntensity, setFilterIntensity] = useState(100);
+
+  // Mosaic state
+  const [mosaicMode, setMosaicMode] = useState(false);
+  const [mosaicBlockSize, setMosaicBlockSize] = useState(15);
+  const [mosaicBrushSize, setMosaicBrushSize] = useState(40);
+  const mosaicCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [isMosaicDrawing, setIsMosaicDrawing] = useState(false);
 
   // Export settings
   const [exportFormat, setExportFormat] = useState<"png" | "jpg" | "webp" | "gif" | "avif" | "bmp">("webp");
@@ -62,9 +119,12 @@ export function ImageEditor() {
     imageAdjustments,
     setImageAdjustments,
     resetImageAdjustments,
+    fullResetImage,
+    undoImageAdjustment,
     processingState,
     addMediaFile,
     originalImageData,
+    historyIndex,
   } = useEditorStore();
 
   const { initCanvas, applyAdjustments, exportImage, resizeImage, cropImage } = useImageProcessor();
@@ -78,15 +138,13 @@ export function ImageEditor() {
         return;
       }
 
-      // TODO: Re-enable HEIC/RAW support when CDN-based loading is implemented
-      // if (isHeicFile(file)) {
-      //   toast.info("HEIC画像を変換中...");
-      //   file = await ensureBrowserCompatibleImage(file);
-      // } else if (isRawFile(file)) {
-      //   toast.info("RAW画像を変換中...");
-      //   file = await ensureBrowserCompatibleRawImage(file);
-      // } else
-      if (!file.type.startsWith("image/")) {
+      if (isHeicFile(file)) {
+        toast.info("Converting HEIC image...");
+        file = await ensureBrowserCompatibleImage(file);
+      } else if (isRawFile(file)) {
+        toast.info("Converting RAW image...");
+        file = await ensureBrowserCompatibleRawImage(file);
+      } else if (!file.type.startsWith("image/")) {
         toast.error("画像ファイルを選択してください");
         return;
       }
@@ -115,6 +173,16 @@ export function ImageEditor() {
         setExportHeight(img.naturalHeight);
         setResizeWidth(img.naturalWidth);
         setResizeHeight(img.naturalHeight);
+
+        void trackClientEvent({
+          eventName: ANALYTICS_EVENTS.FILE_SELECTED,
+          eventParams: {
+            media_type: "image",
+            mime_type: file.type,
+            file_name: file.name,
+            file_size_bytes: file.size,
+          },
+        });
       };
       img.src = url;
     },
@@ -150,6 +218,43 @@ export function ImageEditor() {
       setResizeHeight(originalImageData.height);
     }
   }, [originalImageData]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    setCropMode(activeTab === "crop");
+    if (activeTab !== "tools") {
+      setMosaicMode(false);
+    }
+  }, [activeTab]);
+
+  // Ctrl+Z keyboard shortcut for undo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undoImageAdjustment();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undoImageAdjustment]);
+
+  useEffect(() => {
+    if (!autoOpenExport) return;
+
+    if (!currentImage) {
+      autoExportOpenedRef.current = false;
+      return;
+    }
+
+    if (!autoExportOpenedRef.current) {
+      setShowExportModal(true);
+      autoExportOpenedRef.current = true;
+    }
+  }, [autoOpenExport, currentImage]);
 
   // Handle export dimension change with aspect ratio
   const handleExportWidthChange = (newWidth: number) => {
@@ -191,17 +296,117 @@ export function ImageEditor() {
     applyAdjustments(imageAdjustments);
   };
 
-  // Apply preset filter
+  // Apply preset filter with intensity
   const handleApplyFilter = (filter: typeof PRESET_FILTERS[0]) => {
     if (filter.id === "none") {
       resetImageAdjustments();
     } else {
+      const intensity = filterIntensity / 100;
+      const scaledAdjustments: Record<string, number> = {};
+      for (const [key, value] of Object.entries(filter.adjustments)) {
+        scaledAdjustments[key] = Math.round(value * intensity);
+      }
       setImageAdjustments({
         ...imageAdjustments,
-        ...filter.adjustments,
+        ...scaledAdjustments,
       });
     }
     toast.success(`${filter.name}フィルターを適用しました`);
+  };
+
+  // Mosaic: initialize mask canvas when entering mosaic mode
+  useEffect(() => {
+    if (mosaicMode && canvasRef.current && mosaicCanvasRef.current) {
+      const mc = mosaicCanvasRef.current;
+      mc.width = canvasRef.current.width;
+      mc.height = canvasRef.current.height;
+      const ctx = mc.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, mc.width, mc.height);
+      }
+    }
+  }, [mosaicMode]);
+
+  // Mosaic drawing handlers
+  const handleMosaicDraw = (clientX: number, clientY: number) => {
+    if (!mosaicMode || !isMosaicDrawing || !mosaicCanvasRef.current || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    const ctx = mosaicCanvasRef.current.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.beginPath();
+    ctx.arc(x, y, mosaicBrushSize * scaleX, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  // Apply mosaic effect to marked areas
+  const applyMosaic = () => {
+    if (!canvasRef.current || !mosaicCanvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const maskCanvas = mosaicCanvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const maskCtx = maskCanvas.getContext("2d");
+    if (!ctx || !maskCtx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+    const blockSize = mosaicBlockSize;
+
+    // Pixelate areas where mask has been drawn
+    for (let by = 0; by < canvas.height; by += blockSize) {
+      for (let bx = 0; bx < canvas.width; bx += blockSize) {
+        // Check if any pixel in this block is masked
+        let isMasked = false;
+        for (let y = by; y < Math.min(by + blockSize, canvas.height) && !isMasked; y++) {
+          for (let x = bx; x < Math.min(bx + blockSize, canvas.width) && !isMasked; x++) {
+            const idx = (y * maskCanvas.width + x) * 4;
+            if (maskData.data[idx + 3] > 0) {
+              isMasked = true;
+            }
+          }
+        }
+
+        if (!isMasked) continue;
+
+        // Average color in this block
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let y = by; y < Math.min(by + blockSize, canvas.height); y++) {
+          for (let x = bx; x < Math.min(bx + blockSize, canvas.width); x++) {
+            const idx = (y * canvas.width + x) * 4;
+            r += imageData.data[idx];
+            g += imageData.data[idx + 1];
+            b += imageData.data[idx + 2];
+            count++;
+          }
+        }
+        r = Math.round(r / count);
+        g = Math.round(g / count);
+        b = Math.round(b / count);
+
+        // Fill block with average color
+        for (let y = by; y < Math.min(by + blockSize, canvas.height); y++) {
+          for (let x = bx; x < Math.min(bx + blockSize, canvas.width); x++) {
+            const idx = (y * canvas.width + x) * 4;
+            imageData.data[idx] = r;
+            imageData.data[idx + 1] = g;
+            imageData.data[idx + 2] = b;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    setMosaicMode(false);
+    toast.success("モザイクを適用しました");
   };
 
   // Handle crop
@@ -271,13 +476,27 @@ export function ImageEditor() {
 
   // Handle export
   const handleExport = async () => {
+    const processedFormat = exportFormat === "gif" ? "png" : exportFormat;
+    void trackClientEvent({
+      eventName: ANALYTICS_EVENTS.EDITOR_EXPORT_START,
+      eventParams: {
+        output_format: exportFormat,
+        processing_format: processedFormat,
+        quality_percent: exportQuality,
+        width: exportWidth,
+        height: exportHeight,
+        file_name: currentImage?.name,
+        export_mode: "advanced",
+      },
+    });
+
     // If dimensions changed, resize first
     if (originalImageData &&
         (exportWidth !== originalImageData.width || exportHeight !== originalImageData.height)) {
       await resizeImage(exportWidth, exportHeight, false);
     }
 
-    const blob = await exportImage(exportFormat === "gif" ? "png" : exportFormat, exportQuality / 100);
+    const blob = await exportImage(processedFormat, exportQuality / 100);
     if (blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -287,6 +506,19 @@ export function ImageEditor() {
       a.click();
       URL.revokeObjectURL(url);
       setShowExportModal(false);
+
+      void trackClientEvent({
+        eventName: ANALYTICS_EVENTS.EDITOR_EXPORT_COMPLETE,
+        eventParams: {
+          output_format: extension,
+          processing_format: processedFormat,
+          quality_percent: exportQuality,
+          width: exportWidth,
+          height: exportHeight,
+          file_name: currentImage?.name,
+          export_mode: "advanced",
+        },
+      });
 
       // Restore original size if changed
       if (originalImageData &&
@@ -298,6 +530,15 @@ export function ImageEditor() {
 
   // Quick export
   const handleQuickExport = async (format: "png" | "jpg" | "webp") => {
+    void trackClientEvent({
+      eventName: ANALYTICS_EVENTS.EDITOR_EXPORT_START,
+      eventParams: {
+        output_format: format,
+        file_name: currentImage?.name,
+        export_mode: "quick",
+      },
+    });
+
     const blob = await exportImage(format);
     if (blob) {
       const url = URL.createObjectURL(blob);
@@ -306,6 +547,15 @@ export function ImageEditor() {
       a.download = `edited_${Date.now()}.${format}`;
       a.click();
       URL.revokeObjectURL(url);
+
+      void trackClientEvent({
+        eventName: ANALYTICS_EVENTS.EDITOR_EXPORT_COMPLETE,
+        eventParams: {
+          output_format: format,
+          file_name: currentImage?.name,
+          export_mode: "quick",
+        },
+      });
     }
   };
 
@@ -343,9 +593,10 @@ export function ImageEditor() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
       </svg>
     )},
-    { id: "ai", label: "AI機能", icon: (
+    { id: "tools", label: "ツール", icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     )},
   ];
@@ -386,18 +637,18 @@ export function ImageEditor() {
   };
 
   return (
-    <div className="h-full flex bg-gray-50 dark:bg-dark-950">
+    <div className="h-full flex flex-col md:flex-row bg-gray-50 dark:bg-dark-950">
       {/* Main canvas area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Canvas - centered with proper spacing */}
-        <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-dark-900 p-6 lg:p-10 overflow-auto">
+        <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-dark-900 p-3 sm:p-6 lg:p-10 overflow-auto">
           {currentImage ? (
             <div
-              className="relative"
-              onMouseDown={handleCropMouseDown}
-              onMouseMove={handleCropMouseMove}
-              onMouseUp={handleCropMouseUp}
-              onMouseLeave={handleCropMouseUp}
+              className="relative inline-block"
+              onMouseDown={!mosaicMode ? handleCropMouseDown : undefined}
+              onMouseMove={!mosaicMode ? handleCropMouseMove : undefined}
+              onMouseUp={!mosaicMode ? handleCropMouseUp : undefined}
+              onMouseLeave={!mosaicMode ? handleCropMouseUp : undefined}
             >
               {/* Hidden image for loading */}
               <img
@@ -416,7 +667,38 @@ export function ImageEditor() {
               {/* Main canvas */}
               <canvas
                 ref={canvasRef}
-                className={`max-w-full max-h-[70vh] rounded-lg shadow-lg ${cropMode ? "cursor-crosshair" : ""}`}
+                className={`max-w-full max-h-[50vh] sm:max-h-[60vh] md:max-h-[70vh] rounded-lg shadow-lg ${cropMode ? "cursor-crosshair" : ""} ${mosaicMode ? "cursor-crosshair" : ""}`}
+                onMouseDown={(e) => {
+                  if (mosaicMode) {
+                    setIsMosaicDrawing(true);
+                    handleMosaicDraw(e.clientX, e.clientY);
+                  }
+                }}
+                onMouseMove={(e) => {
+                  if (mosaicMode) handleMosaicDraw(e.clientX, e.clientY);
+                }}
+                onMouseUp={() => { if (mosaicMode) setIsMosaicDrawing(false); }}
+                onMouseLeave={() => { if (mosaicMode) setIsMosaicDrawing(false); }}
+                onTouchStart={(e) => {
+                  if (mosaicMode && e.touches[0]) {
+                    e.preventDefault();
+                    setIsMosaicDrawing(true);
+                    handleMosaicDraw(e.touches[0].clientX, e.touches[0].clientY);
+                  }
+                }}
+                onTouchMove={(e) => {
+                  if (mosaicMode && e.touches[0]) {
+                    e.preventDefault();
+                    handleMosaicDraw(e.touches[0].clientX, e.touches[0].clientY);
+                  }
+                }}
+                onTouchEnd={() => { if (mosaicMode) setIsMosaicDrawing(false); }}
+              />
+
+              {/* Mosaic mask overlay */}
+              <canvas
+                ref={mosaicCanvasRef}
+                className={`absolute inset-0 w-full h-full rounded-lg pointer-events-none ${mosaicMode ? "opacity-40" : "opacity-0"}`}
               />
 
               {/* Crop overlay */}
@@ -436,6 +718,13 @@ export function ImageEditor() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full" />
                   <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white rounded-full" />
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full" />
+                </div>
+              )}
+
+              {/* Mosaic mode indicator */}
+              {mosaicMode && (
+                <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg z-10">
+                  モザイク描画中 — 塗りつぶした箇所がモザイクになります
                 </div>
               )}
 
@@ -461,23 +750,23 @@ export function ImageEditor() {
           )}
         </div>
 
-        {/* Bottom toolbar - improved spacing */}
+        {/* Bottom toolbar - responsive */}
         {currentImage && (
-          <div className="bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-dark-700 p-5 lg:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-dark-700 p-3 sm:p-5 lg:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {/* Rotation controls */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() =>
                       setImageAdjustments({
                         rotation: (imageAdjustments.rotation - 90 + 360) % 360,
                       })
                     }
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                     title="左に回転"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
                   </button>
@@ -487,31 +776,31 @@ export function ImageEditor() {
                         rotation: (imageAdjustments.rotation + 90) % 360,
                       })
                     }
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                     title="右に回転"
                   >
-                    <svg className="w-5 h-5 transform scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 transform scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
                   </button>
                 </div>
 
                 {/* Flip controls */}
-                <div className="flex items-center gap-2 border-l border-gray-200 dark:border-dark-700 pl-4">
+                <div className="flex items-center gap-1 sm:gap-2 border-l border-gray-200 dark:border-dark-700 pl-2 sm:pl-4">
                   <button
                     onClick={() =>
                       setImageAdjustments({
                         flipHorizontal: !imageAdjustments.flipHorizontal,
                       })
                     }
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                       imageAdjustments.flipHorizontal
                         ? "bg-primary-100 text-primary-600 dark:bg-primary-900/20"
                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700"
                     }`}
                     title="水平反転"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                   </button>
@@ -521,58 +810,87 @@ export function ImageEditor() {
                         flipVertical: !imageAdjustments.flipVertical,
                       })
                     }
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                       imageAdjustments.flipVertical
                         ? "bg-primary-100 text-primary-600 dark:bg-primary-900/20"
                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700"
                     }`}
                     title="垂直反転"
                   >
-                    <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                   </button>
                 </div>
 
                 {/* New image button */}
-                <div className="border-l border-gray-200 dark:border-dark-700 pl-4">
+                <div className="border-l border-gray-200 dark:border-dark-700 pl-2 sm:pl-4">
                   <button
                     onClick={() => {
                       setCurrentImage(null);
                       setImageLoaded(false);
                       resetImageAdjustments();
                     }}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                     title="新しい画像"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Mobile: open editing panel button */}
+                <div className="md:hidden border-l border-gray-200 dark:border-dark-700 pl-2">
+                  <button
+                    onClick={() => setIsMobilePanelOpen(true)}
+                    className="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                    title="編集パネルを開く"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
                   </button>
                 </div>
               </div>
 
-              {/* Export buttons */}
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={resetImageAdjustments}>
-                  リセット
+              {/* Export buttons - responsive */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={undoImageAdjustment}
+                  disabled={historyIndex <= 0}
+                  title="1つ前に戻す (Ctrl+Z)"
+                >
+                  <svg className="w-4 h-4 sm:mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  <span className="hidden sm:inline">戻す</span>
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleQuickExport("png")}>
-                  PNG
+                <Button variant="ghost" size="sm" onClick={fullResetImage}>
+                  <span className="hidden sm:inline">リセット</span>
+                  <span className="sm:hidden text-xs">Reset</span>
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleQuickExport("jpg")}>
-                  JPG
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleQuickExport("webp")}>
-                  WebP
-                </Button>
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => handleQuickExport("png")}>
+                    PNG
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => handleQuickExport("jpg")}>
+                    JPG
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => handleQuickExport("webp")}>
+                    WebP
+                  </Button>
+                </div>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => setShowExportModal(true)}
                   className="bg-gradient-to-r from-blue-600 to-purple-600"
                 >
-                  詳細エクスポート
+                  <span className="hidden sm:inline">詳細エクスポート</span>
+                  <span className="sm:hidden text-xs">保存</span>
                 </Button>
               </div>
             </div>
@@ -580,36 +898,31 @@ export function ImageEditor() {
         )}
       </div>
 
-      {/* Side panel - improved width and spacing */}
+      {/* Side panel - desktop: sidebar, mobile: bottom sheet overlay */}
       {currentImage && (
-        <div className="w-80 lg:w-96 bg-white dark:bg-dark-800 border-l border-gray-200 dark:border-dark-700 flex flex-col shadow-xl">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-dark-700">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  if (tab.id === "crop") {
-                    setCropMode(true);
-                  } else {
-                    setCropMode(false);
-                  }
-                }}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/10"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700"
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+        <>
+          {/* Desktop sidebar */}
+          <div className="hidden md:flex w-80 lg:w-96 bg-white dark:bg-dark-800 border-l border-gray-200 dark:border-dark-700 flex-col shadow-xl">
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 dark:border-dark-700">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/10"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700"
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
 
-          {/* Tab content - improved padding */}
-          <div className="flex-1 overflow-y-auto p-5 lg:p-6">
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto p-5 lg:p-6">
             {/* Adjust tab */}
             {activeTab === "adjust" && (
               <div className="space-y-6">
@@ -768,27 +1081,44 @@ export function ImageEditor() {
             {/* Filters tab */}
             {activeTab === "filters" && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {PRESET_FILTERS.map((filter) => (
+                {/* Category filter */}
+                <div className="flex flex-wrap gap-1.5">
+                  {FILTER_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setFilterCategory(cat.id)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        filterCategory === cat.id
+                          ? "bg-primary-600 text-white"
+                          : "bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-600"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Intensity slider */}
+                <Slider
+                  label="フィルター強度"
+                  min={10}
+                  max={100}
+                  value={filterIntensity}
+                  unit="%"
+                  onChange={(e) => setFilterIntensity(parseInt(e.target.value, 10))}
+                />
+
+                {/* Filter grid */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {PRESET_FILTERS
+                    .filter((f) => filterCategory === "all" || f.category === filterCategory)
+                    .map((filter) => (
                     <button
                       key={filter.id}
                       onClick={() => handleApplyFilter(filter)}
-                      className="group relative overflow-hidden rounded-lg border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
+                      className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-400 transition-all duration-200 cursor-pointer hover:shadow-lg"
                     >
-                      <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 dark:from-dark-700 dark:to-dark-600 flex items-center justify-center">
-                        <span className="text-2xl">
-                          {filter.id === "none" ? "📷" :
-                           filter.id === "vintage" ? "🎞️" :
-                           filter.id === "bw" ? "⚫" :
-                           filter.id === "warm" ? "🌅" :
-                           filter.id === "cool" ? "❄️" :
-                           filter.id === "dramatic" ? "🎭" :
-                           filter.id === "fade" ? "🌫️" :
-                           filter.id === "vivid" ? "🌈" :
-                           filter.id === "sepia" ? "📜" :
-                           "✨"}
-                        </span>
-                      </div>
+                      <div className={`aspect-[4/3] bg-gradient-to-br ${filter.gradient}`} />
                       <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm py-1.5 px-2">
                         <span className="text-xs font-medium text-white">
                           {filter.name}
@@ -800,99 +1130,101 @@ export function ImageEditor() {
               </div>
             )}
 
-            {/* AI tab */}
-            {activeTab === "ai" && (
-              <div className="space-y-4">
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            {/* Tools tab */}
+            {activeTab === "tools" && (
+              <div className="space-y-5">
+                {/* Mosaic tool */}
+                <div className="p-4 bg-gray-50 dark:bg-dark-700 rounded-xl">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                     </svg>
-                    <span className="font-semibold text-purple-700 dark:text-purple-300">AI機能</span>
-                  </div>
-                  <p className="text-sm text-purple-600 dark:text-purple-400">
-                    AI機能は近日公開予定です。Pro以上のプランでご利用いただけます。
+                    モザイクツール
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    画像上をなぞってモザイクをかけたい範囲を指定します。
                   </p>
-                </div>
 
-                {/* AI feature cards */}
-                {[
-                  {
-                    icon: "🔍",
-                    title: "AI高画質化",
-                    description: "画像を最大4倍に拡大し、ディテールを保持",
-                    badge: "Pro",
-                  },
-                  {
-                    icon: "✂️",
-                    title: "背景削除",
-                    description: "ワンクリックで背景を自動削除",
-                    badge: "Pro",
-                  },
-                  {
-                    icon: "🎨",
-                    title: "カラー化",
-                    description: "白黒写真を自然なカラーに変換",
-                    badge: "Business",
-                  },
-                  {
-                    icon: "🖼️",
-                    title: "背景生成",
-                    description: "AIで新しい背景を生成",
-                    badge: "Business",
-                  },
-                  {
-                    icon: "👤",
-                    title: "顔補正",
-                    description: "ポートレート写真を自動補正",
-                    badge: "Pro",
-                  },
-                  {
-                    icon: "🔧",
-                    title: "オブジェクト削除",
-                    description: "不要なオブジェクトを自動削除",
-                    badge: "Business",
-                  },
-                ].map((feature, index) => (
-                  <div
-                    key={index}
-                    className="relative p-4 bg-gray-50 dark:bg-dark-700 rounded-xl border border-gray-200 dark:border-dark-600 opacity-60"
-                  >
-                    <div className="absolute top-2 right-2">
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                        feature.badge === "Pro"
-                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                          : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                      }`}>
-                        {feature.badge}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{feature.icon}</span>
-                      <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {feature.title}
-                        </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                          {feature.description}
-                        </p>
+                  {!mosaicMode ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setMosaicMode(true)}
+                    >
+                      モザイク描画を開始
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                      <Slider
+                        label="ブロックサイズ"
+                        min={5}
+                        max={50}
+                        value={mosaicBlockSize}
+                        unit="px"
+                        onChange={(e) => setMosaicBlockSize(parseInt(e.target.value, 10))}
+                      />
+                      <Slider
+                        label="ブラシサイズ"
+                        min={10}
+                        max={100}
+                        value={mosaicBrushSize}
+                        unit="px"
+                        onChange={(e) => setMosaicBrushSize(parseInt(e.target.value, 10))}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            setMosaicMode(false);
+                            if (mosaicCanvasRef.current) {
+                              const ctx = mosaicCanvasRef.current.getContext("2d");
+                              if (ctx) ctx.clearRect(0, 0, mosaicCanvasRef.current.width, mosaicCanvasRef.current.height);
+                            }
+                          }}
+                        >
+                          キャンセル
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="flex-1"
+                          onClick={applyMosaic}
+                        >
+                          モザイク適用
+                        </Button>
                       </div>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 dark:bg-black/30 rounded-xl">
-                      <span className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-lg">
-                        Coming Soon
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </div>
 
-                <Button
-                  variant="primary"
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600"
-                  onClick={() => toast.info("AI機能は近日公開予定です")}
-                >
-                  プランをアップグレード
-                </Button>
+                {/* AI features - Coming Soon */}
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">AI機能 (Coming Soon)</span>
+                  </div>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mb-3">
+                    AI高画質化、背景削除、カラー化など
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { icon: "🔍", title: "AI高画質化" },
+                      { icon: "✂️", title: "背景削除" },
+                      { icon: "🎨", title: "カラー化" },
+                      { icon: "👤", title: "顔補正" },
+                    ].map((feature, index) => (
+                      <div key={index} className="p-2.5 bg-white/50 dark:bg-dark-800/50 rounded-lg text-center opacity-60">
+                        <span className="text-lg">{feature.icon}</span>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{feature.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -914,7 +1246,248 @@ export function ImageEditor() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+
+          {/* Mobile bottom sheet overlay */}
+          {isMobilePanelOpen && (
+            <div className="md:hidden fixed inset-0 z-50">
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setIsMobilePanelOpen(false)}
+              />
+
+              {/* Bottom sheet */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-800 rounded-t-3xl shadow-2xl max-h-[80vh] flex flex-col animate-slide-up">
+                {/* Handle bar */}
+                <div className="flex items-center justify-center py-3">
+                  <div className="w-10 h-1 bg-gray-300 dark:bg-dark-600 rounded-full" />
+                </div>
+
+                {/* Tabs - horizontal scrollable */}
+                <div className="flex border-b border-gray-200 dark:border-dark-700 px-2">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-1.5 text-xs font-medium transition-colors ${
+                        activeTab === tab.id
+                          ? "text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/10"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab content - scrollable */}
+                <div className="flex-1 overflow-y-auto p-4 pb-8">
+                  {/* Adjust tab */}
+                  {activeTab === "adjust" && (
+                    <div className="space-y-5">
+                      {adjustmentControls.map(({ key, label, min, max }) => (
+                        <Slider
+                          key={key}
+                          label={label}
+                          min={min}
+                          max={max}
+                          value={imageAdjustments[key as keyof typeof imageAdjustments] as number}
+                          unit=""
+                          onChange={(e) =>
+                            setImageAdjustments({
+                              [key]: parseInt(e.target.value, 10),
+                            })
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Crop tab */}
+                  {activeTab === "crop" && (
+                    <div className="space-y-5">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          アスペクト比
+                        </h4>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(["free", "1:1", "4:3", "16:9", "9:16", "3:2"] as CropAspectRatio[]).map((ratio) => (
+                            <button
+                              key={ratio}
+                              onClick={() => setCropAspectRatio(ratio)}
+                              className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                                cropAspectRatio === ratio
+                                  ? "bg-primary-600 text-white"
+                                  : "bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              {ratio === "free" ? "自由" : ratio}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          パネルを閉じて画像上でドラッグしてください
+                        </p>
+                      </div>
+                      {cropRect.width > 10 && cropRect.height > 10 && (
+                        <p className="text-sm text-gray-500">
+                          選択範囲: {Math.round(cropRect.width)} x {Math.round(cropRect.height)}
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button variant="secondary" size="sm" onClick={() => { setCropMode(false); setCropRect({ x: 0, y: 0, width: 0, height: 0 }); }} className="flex-1">
+                          キャンセル
+                        </Button>
+                        <Button variant="primary" size="sm" onClick={() => { handleApplyCrop(); setIsMobilePanelOpen(false); }} className="flex-1" disabled={cropRect.width < 10 || cropRect.height < 10}>
+                          適用
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resize tab */}
+                  {activeTab === "resize" && (
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">幅 (px)</label>
+                          <input type="number" value={resizeWidth} onChange={(e) => handleResizeWidthChange(parseInt(e.target.value) || 0)}
+                            className="w-full px-3 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">高さ (px)</label>
+                          <input type="number" value={resizeHeight} onChange={(e) => handleResizeHeightChange(parseInt(e.target.value) || 0)}
+                            className="w-full px-3 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg text-gray-900 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={resizeMaintainAspect} onChange={(e) => setResizeMaintainAspect(e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">縦横比を維持</span>
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[{ label: "50%", factor: 0.5 }, { label: "75%", factor: 0.75 }, { label: "150%", factor: 1.5 }, { label: "200%", factor: 2 }].map((preset) => (
+                          <button key={preset.label} onClick={() => { if (originalImageData) { setResizeWidth(Math.round(originalImageData.width * preset.factor)); setResizeHeight(Math.round(originalImageData.height * preset.factor)); } }}
+                            className="px-2 py-2 text-sm bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 rounded-lg"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                      <Button variant="primary" onClick={handleApplyResize} className="w-full">リサイズを適用</Button>
+                    </div>
+                  )}
+
+                  {/* Filters tab */}
+                  {activeTab === "filters" && (
+                    <div className="space-y-4">
+                      {/* Category filter - scrollable on mobile */}
+                      <div className="flex gap-1.5 overflow-x-auto pb-1">
+                        {FILTER_CATEGORIES.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setFilterCategory(cat.id)}
+                            className={`px-2.5 py-1 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+                              filterCategory === cat.id
+                                ? "bg-primary-600 text-white"
+                                : "bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400"
+                            }`}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Slider
+                        label="強度"
+                        min={10}
+                        max={100}
+                        value={filterIntensity}
+                        unit="%"
+                        onChange={(e) => setFilterIntensity(parseInt(e.target.value, 10))}
+                      />
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {PRESET_FILTERS
+                          .filter((f) => filterCategory === "all" || f.category === filterCategory)
+                          .map((filter) => (
+                          <button key={filter.id} onClick={() => handleApplyFilter(filter)}
+                            className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 hover:shadow-lg transition-all cursor-pointer"
+                          >
+                            <div className={`aspect-[4/3] bg-gradient-to-br ${filter.gradient}`} />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm py-0.5 px-1">
+                              <span className="text-[10px] font-medium text-white">{filter.name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tools tab */}
+                  {activeTab === "tools" && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 dark:bg-dark-700 rounded-xl">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">モザイクツール</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                          パネルを閉じて画像上をなぞると、その範囲にモザイクがかかります。
+                        </p>
+                        {!mosaicMode ? (
+                          <Button variant="primary" size="sm" className="w-full" onClick={() => { setMosaicMode(true); setIsMobilePanelOpen(false); }}>
+                            モザイク描画を開始
+                          </Button>
+                        ) : (
+                          <div className="space-y-3">
+                            <Slider label="ブロックサイズ" min={5} max={50} value={mosaicBlockSize} unit="px"
+                              onChange={(e) => setMosaicBlockSize(parseInt(e.target.value, 10))}
+                            />
+                            <Slider label="ブラシサイズ" min={10} max={100} value={mosaicBrushSize} unit="px"
+                              onChange={(e) => setMosaicBrushSize(parseInt(e.target.value, 10))}
+                            />
+                            <div className="flex gap-2">
+                              <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setMosaicMode(false); }}>
+                                キャンセル
+                              </Button>
+                              <Button variant="primary" size="sm" className="flex-1" onClick={() => { applyMosaic(); setIsMobilePanelOpen(false); }}>
+                                適用
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                          AI機能（高画質化・背景削除等）は近日公開予定
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image info at bottom of sheet */}
+                <div className="p-3 border-t border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900 flex items-center justify-between">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {currentImage.name} • {originalImageData ? `${originalImageData.width}x${originalImageData.height}` : `${currentImage.width}x${currentImage.height}`} • {(currentImage.size / 1024 / 1024).toFixed(1)}MB
+                  </div>
+                  <button
+                    onClick={() => setIsMobilePanelOpen(false)}
+                    className="ml-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-200 dark:bg-dark-700 rounded-lg"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Export Modal */}

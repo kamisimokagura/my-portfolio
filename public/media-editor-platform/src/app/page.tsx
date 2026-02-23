@@ -212,8 +212,8 @@ export default function HomePage() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />
           </div>
 
-          <div className="relative z-10 w-full max-w-5xl mx-auto px-8 sm:px-12 lg:px-16 py-28 sm:py-36">
-            <div className="text-center mx-auto">
+          <div className="relative z-10 w-full flex justify-center py-28 sm:py-36">
+            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20 text-center">
               {/* Badge */}
               <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-card mb-12 stagger-item">
                 <span className="relative flex h-2.5 w-2.5">
@@ -226,13 +226,13 @@ export default function HomePage() {
               </div>
 
               {/* Main Heading */}
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-12 stagger-item">
-                <span className="block text-gray-900 dark:text-white mb-4">ブラウザだけで</span>
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 sm:mb-12 stagger-item">
+                <span className="block text-gray-900 dark:text-white mb-2 sm:mb-4">ブラウザだけで</span>
                 <span className="block gradient-text-animated">プロ級編集</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-16 stagger-item leading-relaxed">
+              <p className="text-base sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 sm:mb-16 stagger-item leading-relaxed px-2 sm:px-0">
                 動画トリミング、画像編集、AI高画質化まで。
                 <br className="hidden sm:block" />
                 <span className="font-semibold text-gray-900 dark:text-white">
@@ -259,9 +259,9 @@ export default function HomePage() {
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-wrap justify-center gap-6 stagger-item">
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 stagger-item px-4 sm:px-0">
                 <Link href="/editor">
-                  <button className="group relative px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-900/20 dark:hover:shadow-white/20">
+                  <button className="group relative w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-900/20 dark:hover:shadow-white/20">
                     <span className="relative z-10 flex items-center gap-3">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -278,7 +278,7 @@ export default function HomePage() {
                   </button>
                 </Link>
                 <Link href="/image">
-                  <button className="group px-10 py-5 bg-white dark:bg-dark-800 text-gray-900 dark:text-white font-semibold rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                  <button className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white dark:bg-dark-800 text-gray-900 dark:text-white font-semibold rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300 hover:scale-105 hover:shadow-xl">
                     <span className="flex items-center gap-3">
                       <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -416,7 +416,7 @@ export default function HomePage() {
               </p>
             </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-5">
                 {tools.map((tool, index) => (
                   <Link key={index} href={tool.href}>
                     <div className="group p-6 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 text-center cursor-pointer">
@@ -450,7 +450,7 @@ export default function HomePage() {
               </p>
             </div>
 
-              <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-16">
                 {[
                 {
                   step: "01",
@@ -523,11 +523,22 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
               {[
                 {
                   title: "動画",
-                  formats: ["MP4", "WebM", "MOV", "AVI", "MKV", "FLV", "WMV", "MPEG", "3GP", "GIF"],
+                  formats: [
+                    { name: "MP4", desc: "最も互換性の高い動画形式。H.264/H.265コーデック対応" },
+                    { name: "WebM", desc: "Web最適化形式。VP9コーデックで高圧縮" },
+                    { name: "MOV", desc: "Apple開発の高品質形式。ProRes対応" },
+                    { name: "AVI", desc: "Windows標準形式。非圧縮にも対応" },
+                    { name: "MKV", desc: "多トラック対応のオープン形式。字幕埋め込み可" },
+                    { name: "FLV", desc: "Flash Video形式。ストリーミング向け" },
+                    { name: "WMV", desc: "Windows Media形式。DRM対応" },
+                    { name: "MPEG", desc: "標準動画形式。DVD等で広く使用" },
+                    { name: "3GP", desc: "モバイル向け軽量動画形式" },
+                    { name: "GIF", desc: "アニメーション対応。256色制限" },
+                  ],
                   gradient: "from-red-500 to-orange-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -538,7 +549,19 @@ export default function HomePage() {
                 },
                 {
                   title: "画像",
-                  formats: ["PNG", "JPG", "WebP", "AVIF", "GIF", "SVG", "HEIC", "RAW", "BMP", "TIFF", "ICO"],
+                  formats: [
+                    { name: "PNG", desc: "可逆圧縮 / 透過対応。ロゴやイラストに最適" },
+                    { name: "JPG", desc: "非可逆圧縮 / 写真向け。最も汎用的な形式" },
+                    { name: "WebP", desc: "Google開発の次世代形式。高圧縮+透過対応" },
+                    { name: "AVIF", desc: "最新の高圧縮形式。WebPより更に小さいサイズ" },
+                    { name: "GIF", desc: "アニメーション対応。256色制限あり" },
+                    { name: "SVG", desc: "ベクター形式。拡大しても劣化しない" },
+                    { name: "HEIC", desc: "Apple標準形式。JPGの約半分のサイズ" },
+                    { name: "RAW", desc: "カメラ生データ。最高品質の編集が可能" },
+                    { name: "BMP", desc: "無圧縮ビットマップ。Windows標準" },
+                    { name: "TIFF", desc: "高品質印刷向け。レイヤー・透過対応" },
+                    { name: "ICO", desc: "アイコン形式。Webサイトfavicon等に使用" },
+                  ],
                   gradient: "from-purple-500 to-pink-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -548,7 +571,16 @@ export default function HomePage() {
                 },
                 {
                   title: "音声",
-                  formats: ["MP3", "WAV", "OGG", "AAC", "FLAC", "M4A", "AIFF", "WMA"],
+                  formats: [
+                    { name: "MP3", desc: "最も汎用的な音声形式。高い互換性" },
+                    { name: "WAV", desc: "非圧縮音声。最高音質だがサイズ大" },
+                    { name: "OGG", desc: "オープンソースの圧縮形式。Web向け" },
+                    { name: "AAC", desc: "MP3後継の高音質形式。Apple標準" },
+                    { name: "FLAC", desc: "可逆圧縮。CD品質を完全保持" },
+                    { name: "M4A", desc: "AAC音声のコンテナ形式。iTunes標準" },
+                    { name: "AIFF", desc: "Apple非圧縮形式。プロ音楽制作向け" },
+                    { name: "WMA", desc: "Windows Media Audio。DRM対応" },
+                  ],
                   gradient: "from-green-500 to-teal-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -562,13 +594,18 @@ export default function HomePage() {
                     {category.icon}
                   </div>
                   <h3 className="text-2xl font-bold mb-8">{category.title}</h3>
-                  <div className="flex flex-wrap justify-center gap-4">
+                  <div className="flex flex-wrap justify-center gap-2.5 sm:gap-4">
                     {category.formats.map((format, i) => (
                       <span
                         key={i}
-                        className="px-5 py-2.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium hover:bg-white/20 transition-colors cursor-default"
+                        className="group relative px-3.5 py-2 sm:px-5 sm:py-2.5 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium hover:bg-white/20 transition-colors cursor-default"
                       >
-                        {format}
+                        {format.name}
+                        {/* Tooltip - hidden on mobile, visible on hover for desktop */}
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-dark-700 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 hidden sm:block">
+                          {format.desc}
+                          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-dark-700" />
+                        </span>
                       </span>
                     ))}
                   </div>
@@ -640,7 +677,7 @@ export default function HomePage() {
       <footer className="bg-gray-900 dark:bg-dark-950 text-white py-24">
         <div className="w-full flex justify-center">
           <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-          <div className="grid md:grid-cols-4 gap-12 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-16">
             {/* Logo & Description */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-8">
