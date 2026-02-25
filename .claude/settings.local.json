@@ -19,7 +19,9 @@
       "Bash(git mv:*)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(robocopy:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }
