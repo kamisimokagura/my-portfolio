@@ -8,13 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [
-    react({
-      typescript: {
-        ignoreBuildErrors: true, // ビルド時の型チェックエラーを無視
-      },
-    }),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),

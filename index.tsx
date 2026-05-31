@@ -17,6 +17,11 @@ type Project = {
   year: string;
 };
 
+type ContactSubmitMessage = {
+  type: 'success' | 'error';
+  text: string;
+};
+
 // =========================================================================
 // 【編集用エリア】ここにあなたの制作物を入力してください
 // 画像ファイルは public/images フォルダを作成して入れてください。
@@ -608,6 +613,71 @@ const About = () => {
 };
 
 const Contact = () => {
+  const formspreeEndpoint = import.meta.env.VITE_FORMSPREE_ENDPOINT?.trim();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<ContactSubmitMessage | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!formspreeEndpoint) {
+      setSubmitMessage({
+        type: 'error',
+        text: 'Contact form is not configured yet. Please try again later.',
+      });
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const name = String(formData.get('name') ?? '').trim();
+    const email = String(formData.get('email') ?? '').trim();
+    const message = String(formData.get('message') ?? '').trim();
+
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const response = await fetch(formspreeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          _subject: `Portfolio contact from ${name || 'Website visitor'}`,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const errorText = Array.isArray(payload?.errors)
+          ? payload.errors.map((item: { message?: string }) => item.message).filter(Boolean).join(' ')
+          : null;
+
+        throw new Error(errorText || 'Message could not be sent.');
+      }
+
+      form.reset();
+      setSubmitMessage({
+        type: 'success',
+        text: 'Message sent successfully. I will get back to you soon.',
+      });
+    } catch (error) {
+      const text = error instanceof Error ? error.message : 'Message could not be sent.';
+      setSubmitMessage({
+        type: 'error',
+        text,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="min-h-screen flex flex-col justify-center py-32 px-6 md:px-20 bg-[#0a0a0a] relative overflow-hidden">
         {/* Background Ambient */}
@@ -634,55 +704,73 @@ const Contact = () => {
            transition={{ duration: 0.8, delay: 0.2 }}
            viewport={{ once: true }}
            className="w-full space-y-10"
-           onSubmit={(e) => e.preventDefault()}
+           onSubmit={handleSubmit}
         >
            <div className="grid md:grid-cols-2 gap-10">
-               <div className="group relative">
-                   <label htmlFor="name" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Name</label>
-                   <input 
-                     type="text" 
-                     id="name" 
-                     className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
-                     placeholder="Your Name"
-                   />
-               </div>
-               <div className="group relative">
+                <div className="group relative">
+                    <label htmlFor="name" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Name</label>
+                    <input 
+                      type="text" 
+                      id="name" 
+                      name="name"
+                      required
+                      className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
+                      placeholder="Your Name"
+                    />
+                </div>
+                <div className="group relative">
                    <label htmlFor="email" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Email</label>
-                   <input 
-                     type="email" 
-                     id="email" 
-                     className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
-                     placeholder="your@email.com"
-                   />
-               </div>
-           </div>
+                    <input 
+                      type="email" 
+                      id="email" 
+                      name="email"
+                      required
+                      className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
+                      placeholder="your@email.com"
+                    />
+                </div>
+            </div>
 
            <div className="group relative">
                <label htmlFor="message" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Message</label>
-               <textarea 
-                 id="message" 
-                 rows={6}
-                 className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-4 outline-none transition-colors duration-300 text-sm resize-none placeholder-gray-800"
-                 placeholder="Tell me about your project..."
-               ></textarea>
-           </div>
+                <textarea 
+                  id="message" 
+                  name="message"
+                  rows={6}
+                  required
+                  className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-4 outline-none transition-colors duration-300 text-sm resize-none placeholder-gray-800"
+                  placeholder="Tell me about your project..."
+                ></textarea>
+            </div>
 
-           <div className="flex gap-6 pt-4">
-              <button className="px-8 py-3 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-gray-200 transition-colors">
-                  Send Message
+            <div className="flex gap-6 pt-4">
+               <button
+                 type="submit"
+                 disabled={isSubmitting || !formspreeEndpoint}
+                 className="px-8 py-3 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                   {isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+               <button type="reset" className="px-8 py-3 bg-transparent border border-gray-800 text-white text-xs font-bold tracking-[0.2em] uppercase hover:border-white transition-colors">
+                    Reset
               </button>
-              <button type="reset" className="px-8 py-3 bg-transparent border border-gray-800 text-white text-xs font-bold tracking-[0.2em] uppercase hover:border-white transition-colors">
-                  Reset
-              </button>
-           </div>
+            </div>
+            {submitMessage ? (
+              <p
+                aria-live="polite"
+                className={`text-sm ${submitMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
+              >
+                {submitMessage.text}
+              </p>
+            ) : null}
         </motion.form>
 
         <div className="flex justify-center md:justify-start gap-8 mt-20">
           {[
-            { Icon: Twitter, href: "https://x.com/", label: "Twitter" },
+            { Icon: Twitter, href: "https://x.com/dadydKRKMX34157", label: "Twitter" },
             { Icon: Facebook, href: "https://www.facebook.com/", label: "Facebook" },
             { Icon: Instagram, href: "https://www.instagram.com/", label: "Instagram" },
-            { Icon: Github, href: "https://github.com/", label: "Github" },
+            { Icon: Github, href: "https://github.com/kamisimokagura", label: "Github" },
           ].map(({ Icon, href, label }, i) => (
             <a 
               key={i} 
