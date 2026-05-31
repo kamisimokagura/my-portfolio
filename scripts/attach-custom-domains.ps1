@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-if (-not $TeamId) {
+if ([string]::IsNullOrWhiteSpace($TeamId)) {
     throw "Vercel Team ID is missing. Set the VERCEL_TEAM_ID environment variable or pass -TeamId."
 }
 
