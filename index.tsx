@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Github, Twitter, Instagram, Facebook, ChevronDown } from 'lucide-react';
+import { ArrowUpRight, Github, Twitter, ChevronDown } from 'lucide-react';
 
 // --- Types & Data ---
 
-type ProjectType = 'AI-driven Development (under development)'| 'original' | 'clone' | 'practice' ;
+type ProjectType = 'ai' | 'oss' | 'original' | 'clone' | 'practice';
 
 type Project = {
   id: number;
@@ -29,15 +29,42 @@ type ContactSubmitMessage = {
 const projects: Project[] = [
   {
     id: 0,
-    title: "media-editor-platform ",
-    category: "AI-driven Development (under development) / media-editor-platform",
-    type: "AI-driven Development (under development)",
+    title: "YGGDRASIL",
+    category: "AI-Driven Development / Web App + MCP Server",
+    type: "ai",
+    image: "images/L.jpg",
+    link: "https://yggdrasil-genesis.vercel.app",
+    year: "2026"
+  },
+  {
+    id: 1,
+    title: "Kagura Search",
+    category: "Open Source / MCP Server + CLI",
+    type: "oss",
+    image: "images/M.png",
+    link: "https://github.com/kamisimokagura/kagura-search",
+    year: "2026"
+  },
+  {
+    id: 2,
+    title: "lucifer-research",
+    category: "Open Source / MCP Server",
+    type: "oss",
+    image: "images/N.png",
+    link: "https://github.com/kamisimokagura/lucifer-research",
+    year: "2026"
+  },
+  {
+    id: 3,
+    title: "MediEdi!",
+    category: "AI-Driven Development / Media Editor Web App",
+    type: "ai",
     image: "images/K.png",
     link: "https://media-editor-platform.vercel.app",  // Next.js なので別サーバーで起動。デプロイ後は本番URLに変更
     year: "2026"
   },
   {
-    id: 1,
+    id: 4,
     title: "web-writing-final",
     category: "Original / web-writing-final",
     type: "original",
@@ -46,7 +73,7 @@ const projects: Project[] = [
     year: "2026"
   },
   {
-    id: 2,
+    id: 5,
     title: "jiwa nusantara",
     category: "Original / EC like site",
     type: "original",
@@ -55,7 +82,7 @@ const projects: Project[] = [
     year: "2025"
   },
   {
-    id: 3,
+    id: 6,
     title: "Tech Blog",
     category: "Practice / Media",
     type: "practice",
@@ -64,7 +91,7 @@ const projects: Project[] = [
     year: "2024"
   },
   {
-    id: 4,
+    id: 7,
     title: "Culinary Journal",
     category: "Original / Lifestyle",
     type: "original",
@@ -74,7 +101,7 @@ const projects: Project[] = [
     year: "2024"
   },
   {
-    id: 5,
+    id: 8,
     title: "Tourism LP",
     category: "Original / Landing Page",
     type: "original",
@@ -83,7 +110,7 @@ const projects: Project[] = [
     year: "2024"
   },
   {
-    id: 6,
+    id: 9,
     title: "Gaming Gadgets",
     category: "Original / Product Site",
     type: "original",
@@ -92,7 +119,7 @@ const projects: Project[] = [
     year: "2024"
   },
   {
-    id: 7,
+    id: 10,
     title: "Apple Clone",
     category: "Clone / UI Design",
     type: "clone",
@@ -101,7 +128,7 @@ const projects: Project[] = [
     year: "2023"
   },
   {
-    id: 8,
+    id: 11,
     title: "Coating Bike",
     category: "Practice / Development",
     type: "practice",
@@ -110,7 +137,7 @@ const projects: Project[] = [
     year: "2023"
   },
   {
-    id: 9,
+    id: 12,
     title: "Photographer Portfolio",
     category: "Practice / Design",
     type: "practice",
@@ -119,7 +146,7 @@ const projects: Project[] = [
     year: "2023"
   },
   {
-    id: 10,
+    id: 13,
     title: "Modern Furniture",
     category: "Practice / E-Commerce",
     type: "practice",
@@ -292,15 +319,15 @@ const Hero = () => {
          <div className="flex flex-col gap-6">
             <div className="border-l-2 border-white pl-4 md:border-l-0 md:pl-0">
                 <p className="font-sans text-sm md:text-base leading-relaxed text-gray-200 tracking-wide font-light">
-                    円滑なコミュニケーションを心掛け<br/>
-                    作業の効率化と品質向上を目指します。
+                    AIエージェントと役割を分けて、<br/>
+                    企画から本番運用まで担当します。
                 </p>
             </div>
             <div className="md:border-l border-gray-800 md:pl-4">
                 <p className="font-sans text-xs md:text-sm leading-relaxed text-gray-500 tracking-wider font-light">
-                    Prioritizing seamless communication,<br/>
-                    I craft digital experiences that<br/>
-                    enhance efficiency and value.
+                    Working alongside AI agents,<br/>
+                    I take products from idea<br/>
+                    to production.
                 </p>
             </div>
          </div>
@@ -336,7 +363,7 @@ const ProjectCard: React.FC<{ project: Project; index: number }> = ({ project })
               
               {/* Title Section - Occupies more space on Desktop */}
               <div className="lg:col-span-6 mix-blend-difference text-white overflow-hidden">
-                <span className="text-xs font-mono text-gray-400 mb-2 md:mb-3 block">0{project.id} — {project.year}</span>
+                <span className="text-xs font-mono text-gray-400 mb-2 md:mb-3 block">{String(project.id).padStart(2, '0')} — {project.year}</span>
                 {/* Responsive font sizing and break-words to prevent overlap */}
                 <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl serif font-light tracking-tight leading-[1.1] break-words">
                   {project.title}
@@ -397,7 +424,8 @@ const Work = () => {
 
   const filters = [
     { key: 'all', label: 'All', jp: '全て' },
-    { key: 'AI-driven Development (under development)', label: 'AI-driven Development (under development)', jp: 'AI駆動開発（開発中）' },
+    { key: 'ai', label: 'AI-Driven Development', jp: 'AI駆動開発' },
+    { key: 'oss', label: 'Open Source', jp: 'OSS' },
     { key: 'original', label: 'Originals', jp: '制作物' },
     { key: 'clone', label: 'Clones', jp: 'クローン' },
     { key: 'practice', label: 'Practice', jp: '模写' },
@@ -413,7 +441,7 @@ const Work = () => {
               <span className="text-xs text-gray-500 font-light tracking-wider hidden sm:inline-block">制作実績</span>
            </div>
            <p className="text-xs text-gray-400 font-light mt-1">
-             Originals, Clones, and Coding Practice
+             AI-Driven Apps, Open Source, and Web Production
            </p>
         </div>
 
@@ -512,16 +540,18 @@ const About = () => {
                 </div>
                 <div>
                   <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Age / 年齢</span>
-                  <span className="text-white text-base">21</span>
+                  <span className="text-white text-base">22</span>
                 </div>
                 <div>
                   <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Role / 職業</span>
-                  <span className="text-white text-base">Freelance (フリー)</span>
+                  <span className="text-white text-base">Freelance / AI-Driven Developer</span>
                 </div>
                 <div>
                    <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Skills / スキル</span>
                    <span className="text-white text-sm leading-relaxed block">
-                    HTML/CSS, JavaScript<br/>
+                    TypeScript, Next.js / React<br/>
+                    Claude Code, Codex, MCP<br/>
+                    Vercel, Supabase, Node.js<br/>
                     Design (Figma, Canva)
                    </span>
                 </div>
@@ -575,14 +605,14 @@ const About = () => {
                  <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">Japanese</h3>
                  <div className="text-gray-300 leading-loose text-justify font-light text-sm md:text-base">
                     <p className="mb-6">
-                    理数文系を修了し、当初はIT分野への道を遠く感じていましたが、素晴らしい講師の方々との出会いにより、技術を学ぶ楽しさと奥深さを知りました。現在は「お客様の期待を超える」をモットーに、ニーズに合わせたスキルアップを欠かさず、「あなたに任せてよかった」と言っていただけるような制作を心がけています。
+                    Web制作から始め、現在はClaude Code・Codexなど複数のAIエージェントと役割を分けながら、Webアプリや業務自動化ツールを企画から本番運用まで手がけています。AIに任せた部分が本当に正しいかを確かめる仕組みづくりも大切にしています。「お客様の期待を超える」をモットーに、「あなたに任せてよかった」と言っていただける制作を心がけています。
                     </p>
                     <a 
                       href="#work" 
                       onClick={scrollToWork}
                       className="inline-flex items-center gap-2 text-white border-b border-white/30 hover:border-white pb-1 transition-colors cursor-pointer group"
                     >
-                        <span>少ないですが、私が制作致しましたサイトを見ていただくと幸いです。</span>
+                        <span>制作実績をご覧ください。</span>
                         <ArrowUpRight className="w-3 h-3 transform transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </a>
                  </div>
@@ -592,7 +622,7 @@ const About = () => {
                  <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">English</h3>
                  <div className="text-gray-400 leading-loose text-justify font-light text-sm md:text-base">
                     <p className="mb-6">
-                    Though I started from a liberal arts background, excellent mentorship revealed the creative potential of development. Today, I am driven by the goal of exceeding client expectations. I constantly refine my technical craft to ensure every project concludes with a sense of trust and satisfaction, aiming to be a partner you can rely on.
+                    I started out in web production. Today I build web apps and workflow automation tools from idea to production, splitting the work with AI agents such as Claude Code and Codex — and building the checks that verify what the AI actually did. My goal is simple: exceed expectations, and be someone you're glad you trusted with the work.
                     </p>
                     <a 
                       href="#work" 
@@ -695,7 +725,7 @@ const Contact = () => {
              <h2 className="text-xs font-mono tracking-[0.4em] uppercase text-white">Contact</h2>
           </div>
           <p className="text-3xl md:text-5xl serif text-white font-medium mb-2">Let's work together.</p>
-          <p className="text-gray-400 font-light text-sm">制作の依頼、ご質問などお気軽にお問い合わせください。</p>
+          <p className="text-gray-400 font-light text-sm">制作のご依頼、Webアプリ開発・AI活用のご相談など、お気軽にお問い合わせください。</p>
         </motion.div>
         
         <motion.form
@@ -768,8 +798,6 @@ const Contact = () => {
         <div className="flex justify-center md:justify-start gap-8 mt-20">
           {[
             { Icon: Twitter, href: "https://x.com/dadydKRKMX34157", label: "Twitter" },
-            { Icon: Facebook, href: "https://www.facebook.com/", label: "Facebook" },
-            { Icon: Instagram, href: "https://www.instagram.com/", label: "Instagram" },
             { Icon: Github, href: "https://github.com/kamisimokagura", label: "Github" },
           ].map(({ Icon, href, label }, i) => (
             <a 
