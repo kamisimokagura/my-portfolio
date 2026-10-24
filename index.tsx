@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, Github, ChevronDown, X as Close, Lock } from 'lucide-react';
@@ -26,6 +26,8 @@ const SCOPE_COLOR: Record<Scope, string> = {
   tooling: 'border-violet-400/60 text-violet-300',
   cms: 'border-rose-400/60 text-rose-300',
   media: 'border-orange-400/60 text-orange-300',
+  prototype: 'border-gray-400/60 text-gray-300',
+  enablement: 'border-pink-400/60 text-pink-300',
 };
 
 const ScopeBadge = ({ scope }: { scope: Scope }) => (
@@ -322,6 +324,7 @@ const Work = () => {
   const [scope, setScope] = useState<'all' | Scope>('all');
   const [visible, setVisible] = useState(6);
   const [open, setOpen] = useState<Project | null>(null);
+  const close = useCallback(() => setOpen(null), []);
 
   useEffect(() => setVisible(6), [kind, scope]);
 
@@ -387,7 +390,7 @@ const Work = () => {
         </div>
       )}
 
-      <ProjectModal project={open} onClose={() => setOpen(null)} />
+      <ProjectModal project={open} onClose={close} />
     </section>
   );
 };
@@ -412,7 +415,7 @@ const AISection = () => (
         <p className="lg:col-span-6 text-gray-300 font-light leading-loose">
           答えの精度がまだ低かった頃から、生成AIを仕事に取り入れてきました。
           いまは毎日、複数のAIに役割を分けて開発しています。
-          新しいモデルやツールが出たら、その日のうちに公式の情報を読んで試し、社内にも共有しています。
+          新しいモデルやツールが出たら、できるだけその日のうちに公式の情報を読んで試し、社内にも共有しています。
         </p>
       </motion.header>
 

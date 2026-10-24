@@ -2,7 +2,7 @@
 // Work done for clients is written so that the client cannot be identified.
 
 export type Kind = 'work' | 'personal' | 'oss' | 'web' | 'practice';
-export type Scope = 'fullstack' | 'frontend' | 'backend' | 'tooling' | 'cms' | 'media';
+export type Scope = 'fullstack' | 'frontend' | 'backend' | 'tooling' | 'cms' | 'media' | 'prototype' | 'enablement';
 
 export type StackGroup = { label: string; items: string[] };
 
@@ -37,6 +37,8 @@ export const SCOPE_LABEL: Record<Scope, { en: string; jp: string; hint: string }
   tooling: { en: 'Tooling / MCP', jp: 'ツール・MCP', hint: '画面のない開発ツール。CLI や AI から呼び出して使います' },
   cms: { en: 'CMS', jp: 'CMS構築', hint: 'WordPress などの CMS で構築・運用' },
   media: { en: 'Media Pipeline', jp: '制作の自動化', hint: '動画・音声の制作工程をコードで自動化' },
+  prototype: { en: 'Prototype', jp: '試作', hint: '技術検証のための試作。本番運用はしていません' },
+  enablement: { en: 'AI Enablement', jp: '社内推進', hint: 'コードではなく、社内にAIを広める仕事' },
 };
 
 export const projects: Project[] = [
@@ -68,7 +70,7 @@ export const projects: Project[] = [
     id: 'w-meeting',
     title: '商談を支援するリアルタイムAIツール（試作）',
     kind: 'work',
-    scope: 'fullstack',
+    scope: 'prototype',
     period: '2026.09',
     summary: '商談中の会話をその場で文字にし、営業担当の画面に次に話す内容の候補を出す試作。',
     role: '技術検証と試作を担当',
@@ -107,13 +109,13 @@ export const projects: Project[] = [
     id: 'w-ai-adoption',
     title: '社内の生成AI活用推進',
     kind: 'work',
-    scope: 'media',
+    scope: 'enablement',
     period: '2026.03 —',
     summary: '社員がAIを使えるようになるための資料づくりと、最新情報の社内発信。',
     role: '一次情報の調査、資料・図解の作成、社内への発信',
     scopeNote: 'コードではなく、社内にAIを広める仕事です。公式の発表や一次情報を確かめてから、分かりやすい形にして共有しています。',
     highlights: [
-      '新しいモデルやツールの公式情報を、出たその日のうちに確かめて共有',
+      '新しいモデルやツールの公式情報を、できるだけ公開当日に確かめて共有',
       '初めての人でも分かる図解と手順書を作成',
       'アイデア出しを助けるAI用の手順（プロンプト）を作り、他部署へ配布',
     ],
@@ -177,13 +179,13 @@ export const projects: Project[] = [
     kind: 'personal',
     scope: 'fullstack',
     period: '2026.08 —',
-    summary: '出勤・退勤とその日の作業を、30分ごとの日報としてスプレッドシートに自動で書き込むアプリ。',
+    summary: '自分の作業記録から30分ごとの日報の下書きを作り、確認してからスプレッドシートに書き込むアプリ。',
     role: '企画・設計・実装・運用',
     scopeNote: 'フルスタックです。画面、ログイン、Google スプレッドシートへの読み書き、自動収集の仕組みまで作りました。',
     highlights: [
-      '作業の記録を30分ごとに自動でまとめ、日報の下書きにする',
+      '作業の記録を30分ごとにまとめ、日報の下書きにする（書き込む前に自分で確認）',
       'Google スプレッドシートを読み書きするAPI連携',
-      '数百本の自動テストで、本番の表を壊さないように確認',
+      '数百本の自動テストで、書き込みの誤りを防ぐ',
     ],
     stack: [
       { label: 'Frontend', items: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'] },
@@ -203,7 +205,7 @@ export const projects: Project[] = [
     role: '設計・実装・毎日の運用',
     scopeNote: '画面のない開発ツールです。AIの動きを見張るフック、作業手順（スキル）、役割ごとのエージェントを自分で書いています。',
     highlights: [
-      '自作のフック 88本・スキル 27・エージェント 11',
+      '自作のフック 80本超・スキル 27・エージェント 11',
       'AIが実行していない作業を「完了」と報告したら、実行記録との食い違いで止める',
       '削除や外部への送信など、取り消せない操作の前に確認を挟む',
     ],
@@ -258,12 +260,12 @@ export const projects: Project[] = [
     kind: 'oss',
     scope: 'tooling',
     period: '2026.04 — 05',
-    summary: 'YouTube・X・GitHub などから、AIが読みやすい形で情報を取り出すツール。',
+    summary: 'YouTube や GitHub などから、AIが読みやすい形で情報を取り出すツール。',
     role: '設計・実装・公開',
     scopeNote: '画面のないツールです。AIから呼び出す MCP サーバーとして動きます。',
     highlights: [
       '取り出しに失敗したら別の方法に切り替える、段階的な仕組み',
-      'ログインが必要なページは、そのサイトの Cookie だけを保存して使う',
+      'ブラウザを使った取り出しにも対応し、保存する情報は対象のサイトの分だけに絞る',
     ],
     stack: [
       { label: 'Language', items: ['TypeScript'] },
@@ -424,12 +426,12 @@ export const projects: Project[] = [
 export const aiStats = [
   { value: '約3年', label: '生成AIを使ってきた期間' },
   { value: '2024〜', label: 'AIを業務に活用' },
-  { value: '88', label: '自作のフック（AIの見張り役）' },
+  { value: '80+', label: '自作のフック（AIの見張り役）' },
   { value: '10+', label: '使い分けているAIサービス' },
 ];
 
 export const aiTimeline = [
-  { when: '2023', text: '生成AIを使い始める。答えの精度がまだ低かった頃から、仕事や学習に取り入れる' },
+  { when: '2023', text: '生成AIを使い始める。答えの精度がまだ低かった頃から、学習に取り入れる' },
   { when: '2024', text: 'AIを業務に活用し始める' },
   { when: '2024.12', text: 'AI×エンジニアのオンラインスクールを修了' },
   { when: '2025.05', text: 'X でAI開発・OSS・最新情報の発信を始める' },
@@ -445,7 +447,7 @@ export const aiServices = [
   { name: 'OpenCode', note: '軽い作業を安いモデルで' },
   { name: 'Gemini', note: 'リアルタイム音声（Live API）' },
   { name: 'ElevenLabs', note: 'AIの声' },
-  { name: 'Kimi / DeepSeek / Grok', note: '新しいモデルを出たらすぐ試す' },
+  { name: 'Kimi / DeepSeek / Grok', note: '新しいモデルが出たらすぐ試す' },
 ];
 
 export const aiPractices = [
@@ -458,7 +460,7 @@ export const aiPractices = [
     text: 'AIが実際には実行していない作業を「完了」と報告したことがありました。それ以来、報告を実行記録と照らし合わせる仕組みを毎日使っています。',
   },
   {
-    title: '一次情報を、いちばん早く',
-    text: '新しいモデルやツールが出たら、公式の発表とリリースノートをその日のうちに読み、試して、社内に共有します。',
+    title: '一次情報を、その日のうちに',
+    text: '新しいモデルやツールが出たら、公式の発表とリリースノートをできるだけその日のうちに読み、試して、社内に共有します。',
   },
 ];
