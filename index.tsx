@@ -469,7 +469,7 @@ const AISection = () => (
               <span className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center"><XLogo /></span>
               <span>
                 <span className="block text-sm text-white">@Kagura_AL_AI</span>
-                <span className="block text-xs text-gray-500 mt-0.5">AIでの開発・OSS・新しいモデルの情報を発信しています</span>
+                <span className="block text-xs text-gray-500 mt-0.5">個人開発の記録、AIやAIサービスを実際に使った感想と、その本質を発信しています</span>
               </span>
             </span>
             <ArrowUpRight className="w-4 h-4 text-gray-500 group-hover:text-white" />
