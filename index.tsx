@@ -132,7 +132,7 @@ const Hero = () => (
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,_rgba(60,60,60,0.25),_rgba(0,0,0,1)_60%)]" />
     <div className="relative z-10 select-none">
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }} className="font-mono text-[11px] md:text-xs tracking-[0.3em] uppercase text-gray-500 mb-6">
-        AL ／ かぐらAL — AI-Native Engineer
+        AL — AI-Native Engineer
       </motion.p>
       {['AI-Native', 'Developer'].map((word, i) => (
         <div key={word} className="overflow-hidden">
@@ -198,6 +198,7 @@ const ProjectRow: React.FC<{ project: Project; index: number; onOpen: (p: Projec
           </div>
           <div className="lg:col-span-4 flex flex-wrap gap-2">
             <ScopeBadge scope={project.scope} />
+            {project.video && <span className="text-[11px] text-white border border-white/30 rounded-full px-2.5 py-1">▶ イメージ動画</span>}
             {project.stack.flatMap((g) => g.items).slice(0, 4).map((t) => (
               <span key={t} className="text-[11px] text-gray-400 border border-gray-800 rounded-full px-2.5 py-1">{t}</span>
             ))}
@@ -248,7 +249,12 @@ const ProjectModal: React.FC<{ project: Project | null; onClose: () => void }> =
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
-            {project.image && (
+            {project.video ? (
+              <figure className="w-full bg-black">
+                <video src={project.video} poster={project.image} autoPlay muted loop playsInline className="w-full aspect-video" aria-label={`${project.title} のイメージ動画`} />
+                <figcaption className="px-6 md:px-10 pt-3 text-[11px] text-gray-500">イメージ動画です。実際の画面・データではありません。</figcaption>
+              </figure>
+            ) : project.image && (
               <div className="aspect-[16/7] w-full overflow-hidden bg-gray-900">
                 <img src={project.image} alt={`${project.title} の画面`} className="w-full h-full object-cover" />
               </div>
@@ -462,7 +468,7 @@ const AISection = () => (
             <span className="flex items-center gap-4">
               <span className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center"><XLogo /></span>
               <span>
-                <span className="block text-sm text-white">かぐらAL ＠Kagura_AL_AI</span>
+                <span className="block text-sm text-white">@Kagura_AL_AI</span>
                 <span className="block text-xs text-gray-500 mt-0.5">AIでの開発・OSS・新しいモデルの情報を発信しています</span>
               </span>
             </span>
@@ -487,7 +493,7 @@ const About = () => (
         </motion.div>
         <motion.dl {...reveal} className="grid grid-cols-2 gap-y-8 gap-x-4 text-sm border-t border-gray-800 pt-8">
           {[
-            ['Name / 名前', 'AL（かぐらAL）'],
+            ['Name / 名前', 'AL'],
             ['Age / 年齢', '22'],
             ['Role / 職業', 'Freelance / AI-Native Engineer'],
             ['Based / 拠点', 'Tokyo, Japan'],

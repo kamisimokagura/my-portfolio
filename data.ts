@@ -20,6 +20,8 @@ export type Project = {
   links: { label: string; href: string }[];
   privateNote?: string;
   image?: string;
+  // A concept video drawn in code; used where the real screen cannot be shown.
+  video?: string;
 };
 
 export const KIND_LABEL: Record<Kind, { en: string; jp: string }> = {
@@ -45,6 +47,8 @@ export const projects: Project[] = [
   // ---- 業務（IT企業から業務委託。社名・製品名は伏せています） ----
   {
     id: 'w-vote',
+    video: 'videos/vote.mp4',
+    image: 'videos/vote.jpg',
     title: '社員向け 店舗検索・投票アプリ',
     kind: 'work',
     scope: 'fullstack',
@@ -68,6 +72,8 @@ export const projects: Project[] = [
   },
   {
     id: 'w-meeting',
+    video: 'videos/meeting.mp4',
+    image: 'videos/meeting.jpg',
     title: '商談を支援するリアルタイムAIツール（試作）',
     kind: 'work',
     scope: 'prototype',
@@ -85,6 +91,8 @@ export const projects: Project[] = [
   },
   {
     id: 'w-media',
+    video: 'videos/media.mp4',
+    image: 'videos/media.jpg',
     title: '社内向け音声・動画コンテンツの制作支援',
     kind: 'work',
     scope: 'media',
@@ -107,6 +115,8 @@ export const projects: Project[] = [
   },
   {
     id: 'w-ai-adoption',
+    video: 'videos/adoption.mp4',
+    image: 'videos/adoption.jpg',
     title: '社内の生成AI活用推進',
     kind: 'work',
     scope: 'enablement',
@@ -175,6 +185,8 @@ export const projects: Project[] = [
   },
   {
     id: 'p-kintai',
+    video: 'videos/nippo.mp4',
+    image: 'videos/nippo.jpg',
     title: '勤怠・日報の自動記録アプリ',
     kind: 'personal',
     scope: 'fullstack',
@@ -197,6 +209,8 @@ export const projects: Project[] = [
   },
   {
     id: 'p-agent-env',
+    video: 'videos/agents.mp4',
+    image: 'videos/agents.jpg',
     title: '複数のAIが分担して開発する環境',
     kind: 'personal',
     scope: 'tooling',
@@ -218,6 +232,8 @@ export const projects: Project[] = [
   },
   {
     id: 'p-browser-agent',
+    video: 'videos/browser.mp4',
+    image: 'videos/browser.jpg',
     title: 'browser-agent',
     kind: 'personal',
     scope: 'tooling',
