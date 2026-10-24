@@ -1,275 +1,120 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Github, Twitter, ChevronDown } from 'lucide-react';
+import { ArrowUpRight, Github, ChevronDown, X as Close, Lock } from 'lucide-react';
+import {
+  projects, KIND_LABEL, SCOPE_LABEL, aiStats, aiTimeline, aiServices, aiPractices,
+  type Project, type Kind, type Scope,
+} from './data';
 
-// --- Types & Data ---
+type ContactSubmitMessage = { type: 'success' | 'error'; text: string };
 
-type ProjectType = 'ai' | 'oss' | 'original' | 'clone' | 'practice';
+const X_URL = 'https://x.com/Kagura_AL_AI';
+const GITHUB_URL = 'https://github.com/kamisimokagura';
 
-type Project = {
-  id: number;
-  title: string;
-  category: string;
-  type: ProjectType;
-  image: string;
-  link: string;
-  year: string;
+// The X logo is not in this lucide version, so draw it.
+const XLogo = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+const SCOPE_COLOR: Record<Scope, string> = {
+  fullstack: 'border-emerald-400/60 text-emerald-300',
+  frontend: 'border-sky-400/60 text-sky-300',
+  backend: 'border-amber-400/60 text-amber-300',
+  tooling: 'border-violet-400/60 text-violet-300',
+  cms: 'border-rose-400/60 text-rose-300',
+  media: 'border-orange-400/60 text-orange-300',
 };
 
-type ContactSubmitMessage = {
-  type: 'success' | 'error';
-  text: string;
-};
+const ScopeBadge = ({ scope }: { scope: Scope }) => (
+  <span className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-1 text-[10px] tracking-[0.15em] uppercase ${SCOPE_COLOR[scope]}`}>
+    {SCOPE_LABEL[scope].en}
+    <span className="opacity-70 normal-case tracking-normal">／{SCOPE_LABEL[scope].jp}</span>
+  </span>
+);
 
-// =========================================================================
-// 【編集用エリア】ここにあなたの制作物を入力してください
-// 画像ファイルは public/images フォルダを作成して入れてください。
-// =========================================================================
-const projects: Project[] = [
-  {
-    id: 0,
-    title: "YGGDRASIL",
-    category: "AI-Driven Development / Web App + MCP Server",
-    type: "ai",
-    image: "images/L.jpg",
-    link: "https://yggdrasil-genesis.vercel.app",
-    year: "2026"
-  },
-  {
-    id: 1,
-    title: "Kagura Search",
-    category: "Open Source / MCP Server + CLI",
-    type: "oss",
-    image: "images/M.png",
-    link: "https://github.com/kamisimokagura/kagura-search",
-    year: "2026"
-  },
-  {
-    id: 2,
-    title: "lucifer-research",
-    category: "Open Source / MCP Server",
-    type: "oss",
-    image: "images/N.png",
-    link: "https://github.com/kamisimokagura/lucifer-research",
-    year: "2026"
-  },
-  {
-    id: 3,
-    title: "MediEdi!",
-    category: "AI-Driven Development / Media Editor Web App",
-    type: "ai",
-    image: "images/K.png",
-    link: "https://media-editor-platform.vercel.app",  // Next.js なので別サーバーで起動。デプロイ後は本番URLに変更
-    year: "2026"
-  },
-  {
-    id: 4,
-    title: "web-writing-final",
-    category: "Original / web-writing-final",
-    type: "original",
-    image: "images/J.png",
-    link: "web-writing-final/web-writing-final 1.html",
-    year: "2026"
-  },
-  {
-    id: 5,
-    title: "jiwa nusantara",
-    category: "Original / EC like site",
-    type: "original",
-    image: "images/I.png",
-    link: "/jiwa-nusantara/index.html",
-    year: "2025"
-  },
-  {
-    id: 6,
-    title: "Tech Blog",
-    category: "Practice / Media",
-    type: "practice",
-    image: "images/E.png",
-    link: "Coating Advanced Arrangement/index.html",
-    year: "2024"
-  },
-  {
-    id: 7,
-    title: "Culinary Journal",
-    category: "Original / Lifestyle",
-    type: "original",
-    // 画像は "images/ファイル名.png" のように指定します
-    image: "images/F.png", 
-    link: "Cooking Blog/index.html",
-    year: "2024"
-  },
-  {
-    id: 8,
-    title: "Tourism LP",
-    category: "Original / Landing Page",
-    type: "original",
-    image: "images/G.png",
-    link: "Tourism LP/index.html",
-    year: "2024"
-  },
-  {
-    id: 9,
-    title: "Gaming Gadgets",
-    category: "Original / Product Site",
-    type: "original",
-    image: "images/H.png",
-    link: "Version with gaming-gadgets-site file structure removed/index.html",
-    year: "2024"
-  },
-  {
-    id: 10,
-    title: "Apple Clone",
-    category: "Clone / UI Design",
-    type: "clone",
-    image: "images/B.png",
-    link: "APPLE/index.html",
-    year: "2023"
-  },
-  {
-    id: 11,
-    title: "Coating Bike",
-    category: "Practice / Development",
-    type: "practice",
-    image: "images/A.png",
-    link: "Coating Introductory Arrangement/index.html",
-    year: "2023"
-  },
-  {
-    id: 12,
-    title: "Photographer Portfolio",
-    category: "Practice / Design",
-    type: "practice",
-    image: "images/C.png",
-    link: "Coating Elementary Arrangement/index.html",
-    year: "2023"
-  },
-  {
-    id: 13,
-    title: "Modern Furniture",
-    category: "Practice / E-Commerce",
-    type: "practice",
-    image: "images/D.png",
-    link: "Coating Intermediate Arrangement/index.html",
-    year: "2023"
-  },
-];
-
-// --- Components ---
+// --- Cursor (only on devices with a fine pointer) ---
 
 const CustomCursor = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [hover, setHover] = useState(false);
 
   useEffect(() => {
-    const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    const mq = window.matchMedia('(pointer: fine)');
+    setEnabled(mq.matches);
+    document.documentElement.classList.toggle('custom-cursor', mq.matches);
+    if (!mq.matches) return;
+    const move = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+    const over = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      setHover(!!t.closest('a, button, [role="button"], input, textarea'));
     };
-
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'A' || 
-        target.tagName === 'BUTTON' || 
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
-        target.closest('a') || 
-        target.closest('button') ||
-        target.classList.contains('cursor-pointer') ||
-        target.classList.contains('filter-btn')
-      ) {
-        setIsHovering(true);
-      } else {
-        setIsHovering(false);
-      }
-    };
-
-    window.addEventListener('mousemove', updateMousePosition);
-    window.addEventListener('mouseover', handleMouseOver);
-
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseover', over);
     return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseover', over);
     };
   }, []);
 
+  if (!enabled) return null;
   return (
     <motion.div
-      className="fixed top-0 left-0 w-8 h-8 rounded-full border border-white pointer-events-none z-[9999] blend-difference flex items-center justify-center mix-blend-difference"
-      animate={{
-        x: mousePosition.x - 16,
-        y: mousePosition.y - 16,
-        scale: isHovering ? 2.5 : 1,
-        backgroundColor: isHovering ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)',
-      }}
-      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      className="fixed top-0 left-0 w-8 h-8 rounded-full border border-white pointer-events-none z-[9999] mix-blend-difference flex items-center justify-center"
+      animate={{ x: pos.x - 16, y: pos.y - 16, scale: hover ? 2.2 : 1, backgroundColor: hover ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)' }}
+      transition={{ type: 'spring', stiffness: 150, damping: 15, mass: 0.1 }}
     >
-      {isHovering && <ArrowUpRight className="text-black w-3 h-3" />}
+      {hover && <ArrowUpRight className="text-black w-3 h-3" />}
     </motion.div>
   );
 };
 
+// --- Nav ---
+
+const SECTIONS = [
+  { id: 'intro', label: 'Intro' },
+  { id: 'work', label: 'Work' },
+  { id: 'ai', label: 'AI' },
+  { id: 'about', label: 'About' },
+  { id: 'contact', label: 'Contact' },
+];
+
+const scrollToId = (id: string) => (e: React.MouseEvent) => {
+  e.preventDefault();
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
 const Nav = () => {
-  const [activeSection, setActiveSection] = useState('intro');
-
-  const scrollTo = (id: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+  const [active, setActive] = useState('intro');
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['intro', 'work', 'about', 'contact'];
-      // Offset allows detection before the section is fully at the top
-      const scrollPosition = window.scrollY + window.innerHeight * 0.3;
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
-          setActiveSection(section);
-        }
+    const onScroll = () => {
+      const y = window.scrollY + window.innerHeight * 0.3;
+      for (const s of SECTIONS) {
+        const el = document.getElementById(s.id);
+        if (el && el.offsetTop <= y && el.offsetTop + el.offsetHeight > y) setActive(s.id);
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const navItems = [
-    { id: 'intro', label: 'Intro' },
-    { id: 'work', label: 'Work' },
-    { id: 'about', label: 'About' },
-    { id: 'contact', label: 'Contact' },
-  ];
-
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
-      className="fixed top-0 left-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference text-white"
+      transition={{ duration: 0.8, delay: 0.4 }}
+      className="fixed top-0 left-0 w-full px-5 py-5 md:p-8 flex justify-between items-center z-50 mix-blend-difference text-white"
     >
-      <a 
-        href="#intro" 
-        onClick={scrollTo('intro')}
-        className="text-xl md:text-2xl font-bold serif tracking-tighter hover:opacity-70 transition-opacity cursor-pointer z-50 pointer-events-auto"
-      >
-        AL.
-      </a>
-      {/* Mobile Nav Visible for accessibility, structured as list */}
-      <ul className="flex space-x-6 md:space-x-12 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase z-50">
-        {navItems.map((item) => (
-          <li key={item.id} className="relative group">
-            <a 
-              href={`#${item.id}`} 
-              onClick={scrollTo(item.id)}
-              className={`hover:opacity-100 transition-opacity duration-300 block py-2 ${activeSection === item.id ? 'opacity-100' : 'opacity-50'}`}
-            >
-              {item.label}
-              <span className={`absolute -bottom-1 left-0 w-full h-[1px] bg-white transform origin-left transition-transform duration-300 ${activeSection === item.id ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+      <a href="#intro" onClick={scrollToId('intro')} className="text-xl md:text-2xl font-bold serif tracking-tighter hover:opacity-70 transition-opacity">AL.</a>
+      <ul className="flex gap-4 md:gap-10 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase">
+        {SECTIONS.map((s) => (
+          <li key={s.id} className="relative group">
+            <a href={`#${s.id}`} onClick={scrollToId(s.id)} className={`block py-2 transition-opacity ${active === s.id ? 'opacity-100' : 'opacity-50 hover:opacity-100'}`}>
+              {s.label}
+              <span className={`absolute -bottom-0.5 left-0 w-full h-px bg-white origin-left transition-transform duration-300 ${active === s.id ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
             </a>
           </li>
         ))}
@@ -278,563 +123,527 @@ const Nav = () => {
   );
 };
 
-const Hero = () => {
-  return (
-    <section id="intro" className="h-screen w-full flex flex-col justify-center px-6 md:px-20 relative overflow-hidden bg-black">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(50,50,50,0.2),_rgba(0,0,0,1))]"></div>
-      </div>
-      
-      <div className="z-10 mt-20 relative select-none">
-        <div className="overflow-hidden">
-          <motion.h1 
-            initial={{ y: "110%" }}
+// --- Hero ---
+
+const Hero = () => (
+  <section id="intro" className="min-h-screen w-full flex flex-col justify-center px-6 md:px-20 pt-28 pb-16 relative overflow-hidden bg-black">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,_rgba(60,60,60,0.25),_rgba(0,0,0,1)_60%)]" />
+    <div className="relative z-10 select-none">
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }} className="font-mono text-[11px] md:text-xs tracking-[0.3em] uppercase text-gray-500 mb-6">
+        AL ／ かぐらAL — AI-Native Engineer
+      </motion.p>
+      {['AI-Native', 'Developer'].map((word, i) => (
+        <div key={word} className="overflow-hidden">
+          <motion.h1
+            initial={{ y: '110%' }}
             animate={{ y: 0 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[14vw] leading-[0.85] serif font-medium text-white mix-blend-difference tracking-tighter"
+            transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className={`text-[15vw] md:text-[12vw] leading-[0.88] serif font-medium tracking-tighter ${i === 0 ? 'text-white' : 'text-[#555] ml-[8vw]'}`}
           >
-            Creative
+            {word}
           </motion.h1>
         </div>
-        <div className="overflow-hidden">
-          <motion.h1 
-            initial={{ y: "110%" }}
-            animate={{ y: 0 }}
-            transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[14vw] leading-[0.85] serif font-medium text-[#555] ml-[10vw] tracking-tighter"
-          >
-            Developer
-          </motion.h1>
-        </div>
-      </div>
+      ))}
+    </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 1 }}
-        className="absolute bottom-12 right-6 md:right-20 flex flex-col md:flex-row gap-12 items-end md:items-start text-right md:text-left z-20"
-      >
-         <div className="hidden md:block w-px h-24 bg-gradient-to-b from-gray-800 to-transparent"></div>
-         
-         <div className="flex flex-col gap-6">
-            <div className="border-l-2 border-white pl-4 md:border-l-0 md:pl-0">
-                <p className="font-sans text-sm md:text-base leading-relaxed text-gray-200 tracking-wide font-light">
-                    AIエージェントと役割を分けて、<br/>
-                    企画から本番運用まで担当します。
-                </p>
-            </div>
-            <div className="md:border-l border-gray-800 md:pl-4">
-                <p className="font-sans text-xs md:text-sm leading-relaxed text-gray-500 tracking-wider font-light">
-                    Working alongside AI agents,<br/>
-                    I take products from idea<br/>
-                    to production.
-                </p>
-            </div>
-         </div>
-         
-         <div className="hidden md:flex flex-col justify-between h-full text-xs font-mono text-gray-600 uppercase tracking-widest text-right">
-             <span>Based in Japan</span>
-             <span>Freelance</span>
-         </div>
-      </motion.div>
-    </section>
-  );
-};
-
-const ProjectCard: React.FC<{ project: Project; index: number }> = ({ project }) => {
-  return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.5 }}
+      transition={{ delay: 1.1, duration: 0.9 }}
+      className="relative z-10 mt-14 grid gap-10 lg:grid-cols-12 items-end"
     >
-        <a 
-          href={project.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group block w-full border-t border-gray-800 py-12 md:py-20 relative overflow-hidden"
-        >
-          {/* Content Layer - Z-Index 20 to stay above image */}
-          {/* Changed grid breakpoint to lg to ensure tablets stack vertically */}
-          <div className="relative z-20 px-6 md:px-20 transition-all duration-500 group-hover:px-12 md:group-hover:px-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-              
-              {/* Title Section - Occupies more space on Desktop */}
-              <div className="lg:col-span-6 mix-blend-difference text-white overflow-hidden">
-                <span className="text-xs font-mono text-gray-400 mb-2 md:mb-3 block">{String(project.id).padStart(2, '0')} — {project.year}</span>
-                {/* Responsive font sizing and break-words to prevent overlap */}
-                <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl serif font-light tracking-tight leading-[1.1] break-words">
-                  {project.title}
-                </h3>
-              </div>
-
-              {/* Category Section */}
-              <div className="lg:col-span-3 text-left lg:text-center mix-blend-difference text-white">
-                <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase font-medium text-gray-300 block">
-                  {project.category}
-                </span>
-              </div>
-
-              {/* Action Section */}
-              <div className="lg:col-span-3 text-left lg:text-right opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
-                <span className="inline-flex items-center gap-2 text-white bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm border border-white/20 text-xs md:text-sm whitespace-nowrap">
-                  View Project <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4" />
-                </span>
-              </div>
-
-            </div>
+      <div className="lg:col-span-5 border-l-2 border-white pl-4">
+        <p className="text-sm md:text-base leading-relaxed text-gray-200 font-light">
+          複数のAIに役割を分けて任せ、<br />
+          企画から本番運用まで一人で届けます。
+        </p>
+        <p className="mt-3 text-xs md:text-sm leading-relaxed text-gray-500 font-light">
+          I split the work across AI agents and ship products from idea to production.
+        </p>
+      </div>
+      <dl className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-800/60 border border-gray-800/60">
+        {aiStats.map((s) => (
+          <div key={s.label} className="bg-black px-4 py-5">
+            <dt className="sr-only">{s.label}</dt>
+            <dd className="serif text-3xl md:text-4xl text-white tabular-nums">{s.value}</dd>
+            <dd className="mt-2 text-[11px] leading-snug text-gray-500">{s.label}</dd>
           </div>
-
-          {/* Hover Background Image Reveal - Z-Index 10 */}
-          <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-            <div className="absolute inset-0 bg-black/50 z-20"></div>
-            <img 
-              src={project.image} 
-              alt={project.title}
-              className="absolute inset-0 w-full h-full object-cover grayscale transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://placehold.co/1920x1080/1a1a1a/FFF?text=Project+Preview';
-              }}
-            />
-          </div>
-        </a>
+        ))}
+      </dl>
     </motion.div>
+  </section>
+);
+
+// --- Work ---
+
+const KIND_ORDER: Kind[] = ['work', 'personal', 'oss', 'web', 'practice'];
+
+const ProjectRow: React.FC<{ project: Project; index: number; onOpen: (p: Project) => void }> = ({ project, index, onOpen }) => (
+  <motion.li layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
+    <button
+      type="button"
+      onClick={() => onOpen(project)}
+      className="group w-full text-left border-t border-gray-800 py-10 md:py-14 relative overflow-hidden focus:outline-none focus-visible:ring-1 focus-visible:ring-white"
+    >
+      <div className="relative z-20 px-6 md:px-20 transition-[padding] duration-500 md:group-hover:px-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center">
+          <div className="lg:col-span-6">
+            <span className="text-xs font-mono text-gray-500 mb-2 block tabular-nums">
+              {String(index + 1).padStart(2, '0')} — {project.period} — {KIND_LABEL[project.kind].jp}
+            </span>
+            <h3 className="text-3xl sm:text-4xl md:text-5xl serif font-light tracking-tight leading-[1.1] break-words text-white">{project.title}</h3>
+            <p className="mt-3 text-sm text-gray-400 font-light max-w-xl">{project.summary}</p>
+          </div>
+          <div className="lg:col-span-4 flex flex-wrap gap-2">
+            <ScopeBadge scope={project.scope} />
+            {project.stack.flatMap((g) => g.items).slice(0, 4).map((t) => (
+              <span key={t} className="text-[11px] text-gray-400 border border-gray-800 rounded-full px-2.5 py-1">{t}</span>
+            ))}
+          </div>
+          <div className="lg:col-span-2 lg:text-right">
+            <span className="inline-flex items-center gap-2 text-white bg-black/50 px-4 py-2 rounded-full border border-white/20 text-xs whitespace-nowrap">
+              詳しく見る <ArrowUpRight className="w-3 h-3" />
+            </span>
+          </div>
+        </div>
+      </div>
+      {project.image && (
+        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+          <div className="absolute inset-0 bg-black/70 z-20" />
+          <img src={project.image} alt="" className="absolute inset-0 w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-[1.5s]" />
+        </div>
+      )}
+    </button>
+  </motion.li>
+);
+
+const ProjectModal: React.FC<{ project: Project | null; onClose: () => void }> = ({ project, onClose }) => {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!project) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [project, onClose]);
+
+  return (
+    <AnimatePresence>
+      {project && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-8"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.article
+            role="dialog" aria-modal="true" aria-labelledby="project-title"
+            className="relative w-full md:max-w-3xl max-h-[92vh] overflow-y-auto bg-[#0b0b0b] border border-gray-800 md:rounded-lg"
+            initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {project.image && (
+              <div className="aspect-[16/7] w-full overflow-hidden bg-gray-900">
+                <img src={project.image} alt={`${project.title} の画面`} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <button ref={closeRef} type="button" onClick={onClose} aria-label="閉じる" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/70 border border-gray-700 flex items-center justify-center text-gray-300 hover:text-white hover:border-white">
+              <Close size={18} />
+            </button>
+
+            <div className="p-6 md:p-10 space-y-8">
+              <header className="space-y-3">
+                <p className="font-mono text-xs text-gray-500 tracking-wider">{KIND_LABEL[project.kind].jp} ／ {project.period}</p>
+                <h3 id="project-title" className="serif text-3xl md:text-5xl text-white leading-tight">{project.title}</h3>
+                <p className="text-gray-300 font-light leading-relaxed">{project.summary}</p>
+              </header>
+
+              <section className="border border-gray-800 rounded-md p-5 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <ScopeBadge scope={project.scope} />
+                  <span className="text-xs text-gray-500">{SCOPE_LABEL[project.scope].hint}</span>
+                </div>
+                <p className="text-sm text-gray-200 leading-relaxed">{project.scopeNote}</p>
+                <p className="text-xs text-gray-500">担当：{project.role}</p>
+              </section>
+
+              <section>
+                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-3">What I built ／ やったこと</h4>
+                <ul className="space-y-2">
+                  {project.highlights.map((h) => (
+                    <li key={h} className="flex gap-3 text-sm text-gray-200 leading-relaxed">
+                      <span className="mt-2 w-1 h-1 rounded-full bg-white shrink-0" />
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-3">Tech Stack ／ 使った技術</h4>
+                <dl className="grid sm:grid-cols-2 gap-4">
+                  {project.stack.map((g) => (
+                    <div key={g.label}>
+                      <dt className="text-[11px] text-gray-500 mb-2">{g.label}</dt>
+                      <dd className="flex flex-wrap gap-2">
+                        {g.items.map((t) => (
+                          <span key={t} className="text-xs text-gray-200 bg-white/5 border border-gray-800 rounded px-2.5 py-1">{t}</span>
+                        ))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+
+              <footer className="flex flex-wrap items-center gap-4 pt-2 border-t border-gray-900">
+                {project.links.map((l) => (
+                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 text-xs font-bold tracking-[0.15em] uppercase hover:bg-gray-200">
+                    {l.label} <ArrowUpRight className="w-3.5 h-3.5" />
+                  </a>
+                ))}
+                {project.privateNote && (
+                  <span className="inline-flex items-center gap-2 text-xs text-gray-500"><Lock size={13} /> {project.privateNote}</span>
+                )}
+              </footer>
+            </div>
+          </motion.article>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 const Work = () => {
-  const [filter, setFilter] = useState<'all' | ProjectType>('all');
-  const [visibleProjects, setVisibleProjects] = useState(3);
+  const [kind, setKind] = useState<'all' | Kind>('all');
+  const [scope, setScope] = useState<'all' | Scope>('all');
+  const [visible, setVisible] = useState(6);
+  const [open, setOpen] = useState<Project | null>(null);
 
-  // Reset visible count when filter changes
-  useEffect(() => {
-    setVisibleProjects(3);
-  }, [filter]);
+  useEffect(() => setVisible(6), [kind, scope]);
 
-  const filteredProjects = projects.filter(p => filter === 'all' ? true : p.type === filter);
-  // Only slice the projects if we are not showing all
-  const displayedProjects = filteredProjects.slice(0, visibleProjects);
-  const hasMore = filteredProjects.length > visibleProjects;
+  const list = useMemo(
+    () => projects.filter((p) => (kind === 'all' || p.kind === kind) && (scope === 'all' || p.scope === scope)),
+    [kind, scope],
+  );
+  const scopesInUse = useMemo(() => Array.from(new Set(projects.map((p) => p.scope))) as Scope[], []);
+  const count = (k: Kind) => projects.filter((p) => p.kind === k).length;
 
-  const handleShowMore = () => {
-    setVisibleProjects(prev => prev + 4);
-  };
-
-  const filters = [
-    { key: 'all', label: 'All', jp: '全て' },
-    { key: 'ai', label: 'AI-Driven Development', jp: 'AI駆動開発' },
-    { key: 'oss', label: 'Open Source', jp: 'OSS' },
-    { key: 'original', label: 'Originals', jp: '制作物' },
-    { key: 'clone', label: 'Clones', jp: 'クローン' },
-    { key: 'practice', label: 'Practice', jp: '模写' },
-  ];
+  const chip = (active: boolean) =>
+    `relative px-3 py-2 text-xs tracking-widest uppercase transition-colors ${active ? 'text-white' : 'text-gray-600 hover:text-gray-300'}`;
 
   return (
-    <section id="work" className="w-full py-20 bg-[#050505]">
-      <div className="px-6 md:px-20 mb-16 flex flex-col md:flex-row md:items-end justify-between border-b border-gray-900 pb-6 gap-6">
-        <div className="flex flex-col gap-2">
-           <div className="flex items-baseline gap-4">
+    <section id="work" className="w-full pt-28 pb-20 bg-[#050505]">
+      <div className="px-6 md:px-20 mb-12 border-b border-gray-900 pb-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-baseline gap-4">
               <h2 className="text-xs font-mono uppercase tracking-[0.2em] text-white">Selected Works</h2>
-              <span className="text-xs text-gray-600 font-light hidden sm:inline-block">/</span>
-              <span className="text-xs text-gray-500 font-light tracking-wider hidden sm:inline-block">制作実績</span>
-           </div>
-           <p className="text-xs text-gray-400 font-light mt-1">
-             AI-Driven Apps, Open Source, and Web Production
-           </p>
+              <span className="text-xs text-gray-500">制作実績 {projects.length} 件</span>
+            </div>
+            <p className="text-xs text-gray-400 font-light mt-2">業務・個人開発・OSS・Web制作。カードを押すと、担当範囲と使った技術が見られます。</p>
+          </div>
+          <p className="text-[11px] text-gray-600 max-w-sm">業務の実績は、お客様が分からないように社名・製品名を伏せて載せています。</p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4">
-           {filters.map((f) => (
-             <button
-               key={f.key}
-               onClick={() => setFilter(f.key as any)}
-               className={`filter-btn relative px-4 py-2 text-xs uppercase tracking-widest transition-colors duration-300 ${filter === f.key ? 'text-white' : 'text-gray-600 hover:text-gray-300'}`}
-             >
-               {f.label} <span className="text-[9px] opacity-60 ml-1">({f.jp})</span>
-               {filter === f.key && (
-                 <motion.div 
-                   layoutId="activeFilter"
-                   className="absolute bottom-0 left-0 w-full h-[1px] bg-white"
-                 />
-               )}
-             </button>
-           ))}
+        <div className="flex flex-wrap gap-1" role="group" aria-label="種類で絞り込む">
+          {(['all', ...KIND_ORDER] as const).map((k) => (
+            <button key={k} type="button" onClick={() => setKind(k)} className={chip(kind === k)} aria-pressed={kind === k}>
+              {k === 'all' ? 'All' : KIND_LABEL[k].en}
+              <span className="text-[9px] opacity-60 ml-1">（{k === 'all' ? `全て ${projects.length}` : `${KIND_LABEL[k].jp} ${count(k)}`}）</span>
+              {kind === k && <motion.span layoutId="kind-underline" className="absolute bottom-0 left-0 w-full h-px bg-white" />}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="担当範囲で絞り込む">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mr-2">Scope</span>
+          <button type="button" onClick={() => setScope('all')} aria-pressed={scope === 'all'} className={`rounded-full border px-3 py-1 text-[10px] tracking-[0.15em] uppercase ${scope === 'all' ? 'border-white text-white' : 'border-gray-800 text-gray-500 hover:text-gray-300'}`}>All</button>
+          {scopesInUse.map((s) => (
+            <button key={s} type="button" onClick={() => setScope(s)} aria-pressed={scope === s} title={SCOPE_LABEL[s].hint}
+              className={`rounded-full border px-3 py-1 text-[10px] tracking-[0.15em] uppercase transition-opacity ${SCOPE_COLOR[s]} ${scope === s ? 'opacity-100 bg-white/5' : 'opacity-50 hover:opacity-90'}`}>
+              {SCOPE_LABEL[s].en}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="w-full min-h-[50vh] flex flex-col items-center">
-        <AnimatePresence mode="wait">
-            <motion.div layout className="w-full">
-                {displayedProjects.map((project, index) => (
-                    <ProjectCard key={project.id} project={project} index={index} />
-                ))}
-            </motion.div>
+      <ul className="w-full">
+        <AnimatePresence mode="popLayout">
+          {list.slice(0, visible).map((p, i) => <ProjectRow key={p.id} project={p} index={i} onOpen={setOpen} />)}
         </AnimatePresence>
-        
-        {displayedProjects.length === 0 && (
-           <div className="py-20 text-center text-gray-600 font-mono text-sm">
-             No projects found in this category.
-           </div>
-        )}
+      </ul>
 
-        {hasMore && (
-           <motion.button 
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             onClick={handleShowMore}
-             className="mt-12 group flex flex-col items-center gap-2 text-gray-500 hover:text-white transition-colors cursor-pointer"
-           >
-              <span className="text-xs font-mono uppercase tracking-widest">View More Works</span>
-              <ChevronDown className="w-5 h-5 animate-bounce" />
-           </motion.button>
-        )}
-      </div>
+      {list.length === 0 && <p className="py-20 text-center text-gray-600 font-mono text-sm">この条件の作品はありません。</p>}
+
+      {list.length > visible && (
+        <div className="flex justify-center">
+          <button type="button" onClick={() => setVisible((v) => v + 6)} className="mt-12 flex flex-col items-center gap-2 text-gray-500 hover:text-white transition-colors">
+            <span className="text-xs font-mono uppercase tracking-widest">もっと見る（残り {list.length - visible} 件）</span>
+            <ChevronDown className="w-5 h-5 animate-bounce" />
+          </button>
+        </div>
+      )}
+
+      <ProjectModal project={open} onClose={() => setOpen(null)} />
     </section>
   );
 };
 
-const About = () => {
-    const scrollToWork = (e: React.MouseEvent) => {
-        e.preventDefault();
-        const element = document.getElementById('work');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      };
+// --- AI ---
 
-  return (
-    <section id="about" className="min-h-screen flex items-center bg-[#0a0a0a] px-6 md:px-20 py-32 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-[#111] to-transparent pointer-events-none"></div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 w-full max-w-8xl mx-auto relative z-10">
-        
-        {/* Left Column: Title & Info */}
-        <div className="lg:col-span-5 flex flex-col justify-between h-full">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4 block">Who I Am</span>
-            <h2 className="serif text-6xl md:text-8xl leading-none mb-6">
-              About<br/><span className="text-gray-700">Me.</span>
-            </h2>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="mt-12 lg:mt-0"
-          >
-            <div className="grid grid-cols-2 gap-y-8 gap-x-4 text-sm font-mono border-t border-gray-800 pt-8">
-                <div>
-                  <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Name / 名前</span>
-                  <span className="text-white text-base">AL</span>
-                </div>
-                <div>
-                  <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Age / 年齢</span>
-                  <span className="text-white text-base">22</span>
-                </div>
-                <div>
-                  <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Role / 職業</span>
-                  <span className="text-white text-base">Freelance / AI-Driven Developer</span>
-                </div>
-                <div>
-                   <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Skills / スキル</span>
-                   <span className="text-white text-sm leading-relaxed block">
-                    TypeScript, Next.js / React<br/>
-                    Claude Code, Codex, MCP<br/>
-                    Vercel, Supabase, Node.js<br/>
-                    Design (Figma, Canva)
-                   </span>
-                </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Interests / 趣味</span>
-                  <span className="text-white text-xs leading-relaxed block">
-                    FPS Games, Sports, Movies<br/>
-                    Outdoor, Watching Videos<br/>
-                    <span className="text-[10px] text-gray-500 mt-1 block">ゲーム(FPS), スポーツ観戦, 映画,<br/>アウトドア, 動画視聴</span>
-                  </span>
-                </div>
-                <div className="col-span-2 sm:col-span-1">
-                    <span className="block text-gray-600 mb-2 text-[10px] uppercase tracking-wider">Availability / 稼働時間</span>
-                    <span className="text-white text-xs leading-relaxed block">
-                        Weekdays: 12:00 - 27:00<br/>
-                        Weekends: 10:00 - 24:00<br/>
-                        <span className="text-[10px] text-gray-500 mt-1 block">平日: 12:00-27:00, 休日: 10:00-24:00</span>
-                    </span>
-                </div>
-              </div>
-          </motion.div>
-        </div>
-
-        {/* Right Column: Image & Bilingual Text */}
-        <div className="lg:col-span-7 flex flex-col gap-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-              className="w-full aspect-video overflow-hidden bg-gray-900"
-            >
-              <img 
-                src="images/omggg1.png" 
-                alt="Workspace" 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 opacity-80 hover:opacity-100"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop';
-                }}
-              />
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="grid md:grid-cols-2 gap-10"
-            >
-              <div className="space-y-6">
-                 <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">Japanese</h3>
-                 <div className="text-gray-300 leading-loose text-justify font-light text-sm md:text-base">
-                    <p className="mb-6">
-                    Web制作から始め、現在はClaude Code・Codexなど複数のAIエージェントと役割を分けながら、Webアプリや業務自動化ツールを企画から本番運用まで手がけています。AIに任せた部分が本当に正しいかを確かめる仕組みづくりも大切にしています。「お客様の期待を超える」をモットーに、「あなたに任せてよかった」と言っていただける制作を心がけています。
-                    </p>
-                    <a 
-                      href="#work" 
-                      onClick={scrollToWork}
-                      className="inline-flex items-center gap-2 text-white border-b border-white/30 hover:border-white pb-1 transition-colors cursor-pointer group"
-                    >
-                        <span>制作実績をご覧ください。</span>
-                        <ArrowUpRight className="w-3 h-3 transform transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                    </a>
-                 </div>
-              </div>
-
-              <div className="space-y-6">
-                 <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">English</h3>
-                 <div className="text-gray-400 leading-loose text-justify font-light text-sm md:text-base">
-                    <p className="mb-6">
-                    I started out in web production. Today I build web apps and workflow automation tools from idea to production, splitting the work with AI agents such as Claude Code and Codex — and building the checks that verify what the AI actually did. My goal is simple: exceed expectations, and be someone you're glad you trusted with the work.
-                    </p>
-                    <a 
-                      href="#work" 
-                      onClick={scrollToWork}
-                      className="inline-flex items-center gap-2 text-gray-300 hover:text-white border-b border-gray-700 hover:border-gray-500 pb-1 transition-colors cursor-pointer group"
-                    >
-                        <span>Please take a look at my work.</span>
-                        <ArrowUpRight className="w-3 h-3 transform transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                    </a>
-                 </div>
-              </div>
-            </motion.div>
-        </div>
-
-      </div>
-    </section>
-  );
+const reveal = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.7 },
 };
+
+const AISection = () => (
+  <section id="ai" className="bg-black px-6 md:px-20 py-28 border-t border-gray-900">
+    <div className="max-w-7xl mx-auto space-y-20">
+      <motion.header {...reveal} className="grid lg:grid-cols-12 gap-8 items-end">
+        <div className="lg:col-span-6">
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4 block">AI, Seriously</span>
+          <h2 className="serif text-5xl md:text-7xl leading-none">AIと、<br /><span className="text-gray-600">本気で。</span></h2>
+        </div>
+        <p className="lg:col-span-6 text-gray-300 font-light leading-loose">
+          答えの精度がまだ低かった頃から、生成AIを仕事に取り入れてきました。
+          いまは毎日、複数のAIに役割を分けて開発しています。
+          新しいモデルやツールが出たら、その日のうちに公式の情報を読んで試し、社内にも共有しています。
+        </p>
+      </motion.header>
+
+      <div className="grid lg:grid-cols-12 gap-14">
+        <motion.div {...reveal} className="lg:col-span-5">
+          <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-6">Timeline ／ AIとの歩み</h3>
+          <ol className="relative border-l border-gray-800 space-y-7 pl-6">
+            {aiTimeline.map((t) => (
+              <li key={t.when + t.text} className="relative">
+                <span className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-white" />
+                <p className="font-mono text-xs text-gray-500 tabular-nums">{t.when}</p>
+                <p className="mt-1 text-sm text-gray-200 leading-relaxed">{t.text}</p>
+              </li>
+            ))}
+          </ol>
+        </motion.div>
+
+        <motion.div {...reveal} className="lg:col-span-7 space-y-12">
+          <div>
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-6">How I work with AI ／ AIとの働き方</h3>
+            <div className="grid md:grid-cols-3 gap-px bg-gray-800/60 border border-gray-800/60">
+              {aiPractices.map((p) => (
+                <div key={p.title} className="bg-black p-5">
+                  <p className="text-white text-sm font-medium mb-2">{p.title}</p>
+                  <p className="text-xs text-gray-400 leading-relaxed">{p.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-6">Services ／ 使い分けているAI</h3>
+            <ul className="grid sm:grid-cols-2 gap-x-8">
+              {aiServices.map((s) => (
+                <li key={s.name} className="flex items-baseline justify-between gap-4 border-b border-gray-900 py-3">
+                  <span className="text-sm text-white">{s.name}</span>
+                  <span className="text-xs text-gray-500 text-right">{s.note}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <a href={X_URL} target="_blank" rel="noopener noreferrer" className="group flex items-center justify-between gap-4 border border-gray-800 hover:border-white rounded-md p-5 transition-colors">
+            <span className="flex items-center gap-4">
+              <span className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center"><XLogo /></span>
+              <span>
+                <span className="block text-sm text-white">かぐらAL ＠Kagura_AL_AI</span>
+                <span className="block text-xs text-gray-500 mt-0.5">AIでの開発・OSS・新しいモデルの情報を発信しています</span>
+              </span>
+            </span>
+            <ArrowUpRight className="w-4 h-4 text-gray-500 group-hover:text-white" />
+          </a>
+        </motion.div>
+      </div>
+    </div>
+  </section>
+);
+
+// --- About ---
+
+const About = () => (
+  <section id="about" className="min-h-screen flex items-center bg-[#0a0a0a] px-6 md:px-20 py-28 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-[#111] to-transparent pointer-events-none" />
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 w-full max-w-7xl mx-auto relative z-10">
+      <div className="lg:col-span-5 flex flex-col gap-12">
+        <motion.div {...reveal}>
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4 block">Who I Am</span>
+          <h2 className="serif text-6xl md:text-8xl leading-none">About<br /><span className="text-gray-700">Me.</span></h2>
+        </motion.div>
+        <motion.dl {...reveal} className="grid grid-cols-2 gap-y-8 gap-x-4 text-sm border-t border-gray-800 pt-8">
+          {[
+            ['Name / 名前', 'AL（かぐらAL）'],
+            ['Age / 年齢', '22'],
+            ['Role / 職業', 'Freelance / AI-Native Engineer'],
+            ['Based / 拠点', 'Tokyo, Japan'],
+          ].map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-gray-600 mb-2 text-[10px] uppercase tracking-wider font-mono">{k}</dt>
+              <dd className="text-white">{v}</dd>
+            </div>
+          ))}
+          <div className="col-span-2">
+            <dt className="text-gray-600 mb-2 text-[10px] uppercase tracking-wider font-mono">Skills / スキル</dt>
+            <dd className="text-white text-sm leading-relaxed">
+              TypeScript, JavaScript, Next.js / React, Node.js<br />
+              Claude Code, Codex, MCP, Gemini Live API<br />
+              Vercel, Supabase, Upstash Redis, Google APIs, WordPress<br />
+              Vitest, Playwright ／ Figma, Canva, Premiere Pro
+            </dd>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <dt className="text-gray-600 mb-2 text-[10px] uppercase tracking-wider font-mono">Languages / 言語</dt>
+            <dd className="text-white text-xs leading-relaxed">日本語・英語（英検準1級）</dd>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <dt className="text-gray-600 mb-2 text-[10px] uppercase tracking-wider font-mono">Interests / 趣味</dt>
+            <dd className="text-white text-xs leading-relaxed">FPS、スポーツ観戦、映画、アウトドア</dd>
+          </div>
+        </motion.dl>
+      </div>
+
+      <div className="lg:col-span-7 flex flex-col gap-12">
+        <motion.div {...reveal} className="w-full aspect-video overflow-hidden bg-gray-900">
+          <img src="images/omggg1.png" alt="作業スペース" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 opacity-80 hover:opacity-100" />
+        </motion.div>
+        <motion.div {...reveal} className="grid md:grid-cols-2 gap-10">
+          <div className="space-y-5">
+            <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">Japanese</h3>
+            <p className="text-gray-300 leading-loose font-light text-sm md:text-base">
+              AI×エンジニアのオンラインスクールで学び、Web制作の仕事から始めました。いまはIT企業との業務委託で、社内で使うWebアプリや業務を自動化するツールを作り、社内の生成AI活用も進めています。AIに任せた部分が本当に正しいかを確かめる仕組みづくりを大切にしています。
+            </p>
+          </div>
+          <div className="space-y-5">
+            <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">English</h3>
+            <p className="text-gray-400 leading-loose font-light text-sm md:text-base">
+              I learned at an AI-and-engineering online school and started out in web production. Today I build internal web apps and automation tools as a contractor for an IT company, and help the team adopt generative AI. I care most about checking that what the AI says it did is what it actually did.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  </section>
+);
+
+// --- Contact ---
 
 const Contact = () => {
-  const formspreeEndpoint = import.meta.env.VITE_FORMSPREE_ENDPOINT?.trim();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<ContactSubmitMessage | null>(null);
+  const endpoint = import.meta.env.VITE_FORMSPREE_ENDPOINT?.trim();
+  const [sending, setSending] = useState(false);
+  const [msg, setMsg] = useState<ContactSubmitMessage | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!formspreeEndpoint) {
-      setSubmitMessage({
-        type: 'error',
-        text: 'Contact form is not configured yet. Please try again later.',
-      });
+    if (!endpoint) {
+      setMsg({ type: 'error', text: 'Contact form is not configured yet. Please try again later.' });
       return;
     }
-
     const form = event.currentTarget;
-    const formData = new FormData(form);
-    const name = String(formData.get('name') ?? '').trim();
-    const email = String(formData.get('email') ?? '').trim();
-    const message = String(formData.get('message') ?? '').trim();
-
-    setIsSubmitting(true);
-    setSubmitMessage(null);
-
+    const data = new FormData(form);
+    const name = String(data.get('name') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    const message = String(data.get('message') ?? '').trim();
+    setSending(true);
+    setMsg(null);
     try {
-      const response = await fetch(formspreeEndpoint, {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          message,
-          _subject: `Portfolio contact from ${name || 'Website visitor'}`,
-        }),
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message, _subject: `Portfolio contact from ${name || 'Website visitor'}` }),
       });
-
-      const payload = await response.json().catch(() => null);
-
-      if (!response.ok) {
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
         const errorText = Array.isArray(payload?.errors)
           ? payload.errors.map((item: { message?: string }) => item.message).filter(Boolean).join(' ')
           : null;
-
         throw new Error(errorText || 'Message could not be sent.');
       }
-
       form.reset();
-      setSubmitMessage({
-        type: 'success',
-        text: 'Message sent successfully. I will get back to you soon.',
-      });
+      setMsg({ type: 'success', text: 'Message sent successfully. I will get back to you soon.' });
     } catch (error) {
-      const text = error instanceof Error ? error.message : 'Message could not be sent.';
-      setSubmitMessage({
-        type: 'error',
-        text,
-      });
+      setMsg({ type: 'error', text: error instanceof Error ? error.message : 'Message could not be sent.' });
     } finally {
-      setIsSubmitting(false);
+      setSending(false);
     }
   };
 
+  const field = 'w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors text-sm placeholder-gray-700';
+
   return (
-    <section id="contact" className="min-h-screen flex flex-col justify-center py-32 px-6 md:px-20 bg-[#0a0a0a] relative overflow-hidden">
-        {/* Background Ambient */}
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_80%,_rgba(20,20,20,1),_rgba(0,0,0,1))]"></div>
-      
+    <section id="contact" className="min-h-screen flex flex-col justify-center py-28 px-6 md:px-20 bg-[#0a0a0a] relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,_rgba(20,20,20,1),_rgba(0,0,0,1))]" />
       <div className="max-w-3xl mx-auto w-full z-10 relative">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="mb-12 text-center md:text-left"
-        >
-          <div className="inline-block border-b border-white mb-6 pb-2">
-             <h2 className="text-xs font-mono tracking-[0.4em] uppercase text-white">Contact</h2>
-          </div>
-          <p className="text-3xl md:text-5xl serif text-white font-medium mb-2">Let's work together.</p>
-          <p className="text-gray-400 font-light text-sm">制作のご依頼、Webアプリ開発・AI活用のご相談など、お気軽にお問い合わせください。</p>
+        <motion.div {...reveal} className="mb-12">
+          <div className="inline-block border-b border-white mb-6 pb-2"><h2 className="text-xs font-mono tracking-[0.4em] uppercase text-white">Contact</h2></div>
+          <p className="text-3xl md:text-5xl serif text-white font-medium mb-3">Let's work together.</p>
+          <p className="text-gray-400 font-light text-sm">Webアプリ開発、AIを使った業務の自動化、社内へのAI導入のご相談など、お気軽にどうぞ。</p>
         </motion.div>
-        
-        <motion.form
-           initial={{ opacity: 0, scale: 0.95 }}
-           whileInView={{ opacity: 1, scale: 1 }}
-           transition={{ duration: 0.8, delay: 0.2 }}
-           viewport={{ once: true }}
-           className="w-full space-y-10"
-           onSubmit={handleSubmit}
-        >
-           <div className="grid md:grid-cols-2 gap-10">
-                <div className="group relative">
-                    <label htmlFor="name" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Name</label>
-                    <input 
-                      type="text" 
-                      id="name" 
-                      name="name"
-                      required
-                      className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
-                      placeholder="Your Name"
-                    />
-                </div>
-                <div className="group relative">
-                   <label htmlFor="email" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Email</label>
-                    <input 
-                      type="email" 
-                      id="email" 
-                      name="email"
-                      required
-                      className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-3 outline-none transition-colors duration-300 text-sm placeholder-gray-800"
-                      placeholder="your@email.com"
-                    />
-                </div>
-            </div>
 
-           <div className="group relative">
-               <label htmlFor="message" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Message</label>
-                <textarea 
-                  id="message" 
-                  name="message"
-                  rows={6}
-                  required
-                  className="w-full bg-transparent border border-gray-800 focus:border-white text-white p-4 outline-none transition-colors duration-300 text-sm resize-none placeholder-gray-800"
-                  placeholder="Tell me about your project..."
-                ></textarea>
+        <form className="w-full space-y-8" onSubmit={handleSubmit}>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <label htmlFor="name" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Name</label>
+              <input type="text" id="name" name="name" required className={field} placeholder="Your Name" />
             </div>
-
-            <div className="flex gap-6 pt-4">
-               <button
-                 type="submit"
-                 disabled={isSubmitting || !formspreeEndpoint}
-                 className="px-8 py-3 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                   {isSubmitting ? 'Sending...' : 'Send Message'}
-                </button>
-               <button type="reset" className="px-8 py-3 bg-transparent border border-gray-800 text-white text-xs font-bold tracking-[0.2em] uppercase hover:border-white transition-colors">
-                    Reset
-              </button>
+            <div>
+              <label htmlFor="email" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Email</label>
+              <input type="email" id="email" name="email" required className={field} placeholder="your@email.com" />
             </div>
-            {submitMessage ? (
-              <p
-                aria-live="polite"
-                className={`text-sm ${submitMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
-              >
-                {submitMessage.text}
-              </p>
-            ) : null}
-        </motion.form>
+          </div>
+          <div>
+            <label htmlFor="message" className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Message</label>
+            <textarea id="message" name="message" rows={6} required className={`${field} p-4 resize-none`} placeholder="Tell me about your project..." />
+          </div>
+          <div className="flex gap-4 pt-2">
+            <button type="submit" disabled={sending || !endpoint} className="px-8 py-3 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {sending ? 'Sending...' : 'Send Message'}
+            </button>
+            <button type="reset" className="px-8 py-3 border border-gray-800 text-white text-xs font-bold tracking-[0.2em] uppercase hover:border-white transition-colors">Reset</button>
+          </div>
+          {msg && <p aria-live="polite" className={`text-sm ${msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>{msg.text}</p>}
+        </form>
 
-        <div className="flex justify-center md:justify-start gap-8 mt-20">
+        <div className="flex gap-6 mt-16">
           {[
-            { Icon: Twitter, href: "https://x.com/dadydKRKMX34157", label: "Twitter" },
-            { Icon: Github, href: "https://github.com/kamisimokagura", label: "Github" },
-          ].map(({ Icon, href, label }, i) => (
-            <a 
-              key={i} 
-              href={href} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              aria-label={label}
-              className="group flex items-center justify-center w-10 h-10 rounded-full border border-gray-800 hover:border-white text-gray-500 hover:text-white transition-all duration-300"
-            >
-                <Icon size={16} />
+            { icon: <XLogo size={16} />, href: X_URL, label: 'X（@Kagura_AL_AI）' },
+            { icon: <Github size={16} />, href: GITHUB_URL, label: 'GitHub' },
+          ].map((l) => (
+            <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" aria-label={l.label}
+              className="flex items-center justify-center w-11 h-11 rounded-full border border-gray-800 hover:border-white text-gray-500 hover:text-white transition-colors">
+              {l.icon}
             </a>
           ))}
         </div>
-        
-        <div className="mt-12 text-center md:text-left">
-           <p className="text-[10px] text-gray-600 uppercase tracking-widest">&copy; {new Date().getFullYear()} AL Portfolio.</p>
-        </div>
+        <p className="mt-10 text-[10px] text-gray-600 uppercase tracking-widest">&copy; {new Date().getFullYear()} AL Portfolio.</p>
       </div>
     </section>
   );
 };
 
-const App = () => {
-  return (
-    <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black">
-      <CustomCursor />
-      <Nav />
-      <main>
-        <Hero />
-        <Work />
-        <About />
-        <Contact />
-      </main>
-    </div>
-  );
-};
+const App = () => (
+  <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black">
+    <CustomCursor />
+    <Nav />
+    <main>
+      <Hero />
+      <Work />
+      <AISection />
+      <About />
+      <Contact />
+    </main>
+  </div>
+);
 
-const root = createRoot(document.getElementById('root')!);
-root.render(<App />);
+createRoot(document.getElementById('root')!).render(<App />);
