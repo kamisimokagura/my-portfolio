@@ -431,6 +431,7 @@ export const aiStats = [
 ];
 
 export const aiTimeline = [
+  { when: '2010年代後半', text: 'YouTube で Transformer（いまの生成AIの土台になった仕組み）を知り、AIに興味を持つ。自分で調べ、触れられるAIは試してみるように' },
   { when: '2023', text: '生成AIを使い始める。答えの精度がまだ低かった頃から、学習に取り入れる' },
   { when: '2024', text: 'AIを業務に活用し始める' },
   { when: '2024.12', text: 'AI×エンジニアのオンラインスクールを修了' },
@@ -440,13 +441,14 @@ export const aiTimeline = [
 ];
 
 export const aiServices = [
-  { name: 'Claude / Claude Code', note: 'Max プラン。開発の中心' },
-  { name: 'ChatGPT / Codex', note: 'コードレビューと画像生成' },
+  { name: 'Claude / Claude Code', note: 'Max・Pro。開発の中心' },
+  { name: 'ChatGPT / Codex', note: 'Pro・Plus。レビューと画像生成' },
   { name: 'Cursor', note: '別のモデルでのレビュー' },
-  { name: 'Devin', note: '別系統の確認役' },
-  { name: 'OpenCode', note: '軽い作業を安いモデルで' },
+  { name: 'Devin', note: 'Pro。別系統の確認役' },
+  { name: 'OpenCode', note: 'Go。軽い作業を安いモデルで' },
   { name: 'Gemini', note: 'リアルタイム音声（Live API）' },
   { name: 'ElevenLabs', note: 'AIの声' },
+  { name: 'Higgsfield', note: 'AIでの動画編集' },
   { name: 'Kimi / DeepSeek / Grok', note: '新しいモデルが出たらすぐ試す' },
 ];
 
