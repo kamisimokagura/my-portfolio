@@ -531,13 +531,13 @@ const About = () => (
           <div className="space-y-5">
             <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">Japanese</h3>
             <p className="text-gray-300 leading-loose font-light text-sm md:text-base">
-              AI×エンジニアのオンラインスクールで学び、Web制作の仕事から始めました。いまはIT企業との業務委託で、社内で使うWebアプリや業務を自動化するツールを作り、社内の生成AI活用も進めています。AIに任せた部分が本当に正しいかを確かめる仕組みづくりを大切にしています。
+              AI×エンジニアのオンラインスクールで学び、Web制作の仕事から始めました。いまはSNSスクール運用会社のCTO室に業務委託のAIエンジニアとして所属しています。社内で使うWebアプリや業務を自動化するツールを作り、社内の生成AI活用も進めています。AIに任せた部分が本当に正しいかを確かめる仕組みづくりを大切にしています。
             </p>
           </div>
           <div className="space-y-5">
             <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">English</h3>
             <p className="text-gray-400 leading-loose font-light text-sm md:text-base">
-              I learned at an AI-and-engineering online school and started out in web production. Today I build internal web apps and automation tools as a contractor for an IT company, and help the team adopt generative AI. I care most about checking that what the AI says it did is what it actually did.
+              I learned at an AI-and-engineering online school and started out in web production. Today I work as a contract AI engineer in the CTO office of a company that runs a social-media school, building internal web apps and automation tools and helping the team adopt generative AI. I care most about checking that what the AI says it did is what it actually did.
             </p>
           </div>
         </motion.div>

@@ -44,7 +44,7 @@ export const SCOPE_LABEL: Record<Scope, { en: string; jp: string; hint: string }
 };
 
 export const projects: Project[] = [
-  // ---- 業務（IT企業から業務委託。社名・製品名は伏せています） ----
+  // ---- 業務（SNSスクール運用会社から業務委託。社名・製品名は伏せています） ----
   {
     id: 'w-vote',
     video: 'videos/vote.mp4',
@@ -452,7 +452,7 @@ export const aiTimeline = [
   { when: '2024', text: 'AIを業務に活用し始める' },
   { when: '2024.12', text: 'AI×エンジニアのオンラインスクールを修了' },
   { when: '2025.05', text: 'X で発信を始める。個人開発の記録や、AIサービスを実際に使った感想とその本質を書いている' },
-  { when: '2026.03', text: 'IT企業と業務委託契約。社内ツールの開発と生成AIの活用推進を担当' },
+  { when: '2026.03', text: 'SNSスクール運用会社と業務委託契約（CTO室所属のAIエンジニア）。社内ツールの開発と生成AIの活用推進を担当' },
   { when: '2026.08', text: 'ハッカソンで YGGDRASIL を発表' },
 ];
 
