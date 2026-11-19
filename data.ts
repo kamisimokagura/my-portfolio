@@ -447,7 +447,7 @@ export const aiStats = [
 ];
 
 export const aiTimeline = [
-  { when: '2010年代後半', text: 'YouTube で Transformer（いまの生成AIの土台になった仕組み）を知り、AIに興味を持つ。自分で調べ、触れられるAIは試してみるように' },
+  { when: 'きっかけ', text: 'YouTube で Transformer（いまの生成AIの土台になった仕組み）を知り、AIに興味を持つ。自分で調べ、触れられるAIは試してみるように' },
   { when: '2023', text: '生成AIを使い始める。答えの精度がまだ低かった頃から、学習に取り入れる' },
   { when: '2024', text: 'AIを業務に活用し始める' },
   { when: '2024.12', text: 'AI×エンジニアのオンラインスクールを修了' },
